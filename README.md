@@ -4,11 +4,11 @@ A per-turn **belief-state** instrumentation layer for τ-bench (the `tau2-bench`
 
 ---
 
-## Motivating example
+## The bug
 
 In airline **task 47** the agent correctly refuses an ineligible refund (**a pass**) — then transfers the user to a human, which the task forbade. That requirement was one clause buried in the free-text spec. Structured, it becomes a typed constraint the grader can check.
 
-## Solution illustration
+## The fix
 
 The raw task is one prose blob; the refactor makes the target spec *and* the agent's evolving belief typed objects (`UNKNOWN` = a slot the agent hasn't resolved). Spec is `TASK_47_SPEC` in [`problem_spec.py`](https://github.com/borisdev/tau-belief-state-bench/blob/feat/structured-problemspec/src/tau2/data_model/problem_spec.py).
 
@@ -89,6 +89,18 @@ was still UNKNOWN.**
 </td>
 </tr>
 </table>
+
+### Candidate fixes
+
+Three small ways to make the grader catch task 47. Each needs **one piece of expert knowledge the written policy doesn't contain** — and that input is the thing to elicit:
+
+| Candidate fix | Why it works | What you need (expert input) |
+|---|---|---|
+| Default every belief slot to `UNKNOWN`; add a system invariant — *never transfer without an explicit YES*. | The agent can't treat an unresolved slot as consent; escalation now requires positive evidence. | the **invariant** |
+| In the `ProblemSpec`, declare that a `transfer` requires `transfer_requested == True`. | *Acting while `UNKNOWN`* becomes a checkable violation, not a judgment call. | the **action precondition** |
+| Grader penalty when an escalating action fires under `UNKNOWN`. | Turns the belief signal into a reward component the lab can use in eval or training. | the **severity weight** |
+
+None of these is prompt engineering the lab can do alone — each is a rule, a precondition, or a weight that a domain expert supplies.
 
 ---
 
@@ -192,7 +204,7 @@ class TaskInstructions(BaseModel):
         return render_prompt(self.general_instructions, self.problem_spec)
 ```
 
-The concrete task-47 before/after is shown at the top in [**Solution illustration**](#solution-illustration). The full per-turn belief trajectory and the graded verdict are in [`poc/CASE_STUDY.md`](poc/CASE_STUDY.md).
+The concrete task-47 before/after is shown at the top in [**The fix**](#the-fix). The full per-turn belief trajectory and the graded verdict are in [`poc/CASE_STUDY.md`](poc/CASE_STUDY.md).
 
 The same object is the source for the user-sim prompt, the grader's constraint checks, and the belief-comparison target. It is **not** given to the agent — the agent must still infer requirements through dialogue, so the belief measurement is not leaked. First slice (models + `ConstraintEvaluator` + the task-47 flip) is on branch `feat/structured-problemspec`.
 
