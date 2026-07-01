@@ -9,7 +9,7 @@ Trimmed, text-only derivative of [`sierra-research/tau2-bench`](https://github.c
 
 ---
 
-## Example
+## Motivating example
 
 In airline **task 47** the agent correctly refuses an ineligible refund (**a pass**) — then transfers the user to a human, which the task forbade. That requirement was one clause buried in the free-text spec. Structured, it becomes a typed constraint the grader can check:
 
@@ -208,7 +208,7 @@ class TaskInstructions(BaseModel):
         return render_prompt(self.general_instructions, self.problem_spec)
 ```
 
-The concrete task-47 before/after, the belief trajectory, and the graded verdict are shown at the top in [**Example**](#example).
+The concrete task-47 before/after, the belief trajectory, and the graded verdict are shown at the top in [**Motivating example**](#motivating-example).
 
 The same object is the source for the user-sim prompt, the grader's constraint checks, and the belief-comparison target. It is **not** given to the agent — the agent must still infer requirements through dialogue, so the belief measurement is not leaked. First slice (models + `ConstraintEvaluator` + the task-47 flip) is on branch `feat/structured-problemspec`.
 
