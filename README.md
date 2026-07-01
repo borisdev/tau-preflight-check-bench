@@ -9,9 +9,9 @@ Trimmed, text-only derivative of [`sierra-research/tau2-bench`](https://github.c
 
 ---
 
-## The idea, in one example
+## Example
 
-τ-bench grades the final database state, so a required behavior that never touches the database is invisible to it. In airline task 47 the agent correctly refuses an ineligible refund — **a pass** — then transfers the user to a human, which the task explicitly forbade. That requirement sat as one clause in a free-text task spec, indistinguishable from persona notes and an exit rule. Make it a **typed constraint** (with the belief slot it tests) and the failure becomes gradeable — and the same move is where tacit expert knowledge enters the grader.
+In airline **task 47** the agent correctly refuses an ineligible refund (**a pass**) — then transfers the user to a human, which the task forbade. That requirement was one clause buried in the free-text spec. Structured, it becomes a typed constraint the grader can check:
 
 **1 — Static: the task, restructured** — this is `TASK_47_SPEC` in [`problem_spec.py`](https://github.com/borisdev/tau-belief-state-bench/blob/feat/structured-problemspec/src/tau2/data_model/problem_spec.py).
 
@@ -181,7 +181,7 @@ class TaskInstructions(BaseModel):
         return render_prompt(self.general_instructions, self.problem_spec)
 ```
 
-The concrete task-47 before/after, the belief trajectory, and the graded verdict are shown at the top in [**The idea, in one example**](#the-idea-in-one-example).
+The concrete task-47 before/after, the belief trajectory, and the graded verdict are shown at the top in [**Example**](#example).
 
 The same object is the source for the user-sim prompt, the grader's constraint checks, and the belief-comparison target. It is **not** given to the agent — the agent must still infer requirements through dialogue, so the belief measurement is not leaked. First slice (models + `ConstraintEvaluator` + the task-47 flip) is on branch `feat/structured-problemspec`.
 
