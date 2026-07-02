@@ -73,29 +73,9 @@ Three small ways to make the grader catch task 47. Each needs **one piece of exp
 
 ---
 
-## Overview
-
-τ-bench grades an agent on the **terminal world state**; it does not measure whether the agent understood the user's problem, or whether it honored requirements that never touch the database. This repo adds two agent-agnostic components on top of the existing benchmark:
-
-1. a **belief observer** that extracts the agent's estimate of the user's problem after each turn, and
-2. a structured **`ProblemSpec`** that lifts a task's requirements out of free-text instructions into typed constraints a grader can check directly.
-
-Trimmed, text-only derivative of [`sierra-research/tau2-bench`](https://github.com/sierra-research/tau2-bench) (MIT); see [`VENDOR.md`](VENDOR.md).
-
-- **The gap.** τ³'s reward is the terminal DB state plus required output substrings (`reward_basis`). A requirement that does not change the DB — e.g. *"do not transfer me to a human"* — is unobservable to the grade. This is verified against τ³'s real grading spec, not assumed.
-- **Pilot (6 airline tasks).** Claude Haiku as the agent under test; Claude Sonnet as user-simulator and belief observer. On **1 of 6 tasks** the belief/constraint layer changes the verdict: **task 47 passes the DB grade while the agent violates an explicit "don't transfer" requirement.** The standard grade already fails 3 tasks (wrongful cancellations); 2 are clean passes. So the layer's net new signal in this pilot is one task.
-- **A second, methodological result.** The LLM used to extract belief-findings is unreliable on its own. A deterministic, evidence-grounding verifier **rejected 3 of its 6 findings** as unsupported by the transcript (two fabricated defects on clean passes, one mislabeled mechanism). Belief-extraction has to be checked against the trace, not trusted.
-- **Refactor (in progress).** A structured `ProblemSpec` + a `ConstraintEvaluator` makes the task-47 requirement gradeable and flips task 47's verdict pass → fail — [issue #1](https://github.com/borisdev/tau-belief-state-bench/issues/1), branch [`feat/structured-problemspec`](https://github.com/borisdev/tau-belief-state-bench/tree/feat/structured-problemspec).
-
-This is a **pilot / existence proof**, not a benchmark result. Six tasks is enough to demonstrate the mechanism and one concrete instance; it is not a rate.
-
----
-
 ## The gap, precisely
 
-τ³ combines its reward from components listed in `EvaluationCriteria.reward_basis` (`src/tau2/data_model/tasks.py`). The default is `[DB, COMMUNICATE]`: the predicted end-state DB hash must match the target, and required substrings must appear. Task **47**'s criteria are `reward_basis = [DB, COMMUNICATE]` with `communicate_info = []`, so the grade reduces to a single question: *did the database change?*
-
-Task 47's user instructions include: *"you don't want to be transferred to another agent."* The agent correctly refuses an ineligible refund (no DB change → the grade is a **pass**) and then calls `transfer_to_human_agents` anyway, with no prior user request to be transferred. Nothing in `reward_basis` observes this. The one `nl_assertion` on the task is diagnostic-only (it is not in `reward_basis`) and checks cancellation, not transfers.
+τ³'s reward is a product of the components in `EvaluationCriteria.reward_basis` (`src/tau2/data_model/tasks.py`). Task 47's is `[DB, COMMUNICATE]` with `communicate_info = []`, so the grade reduces to one question — *did the database change?* The agent made no DB change, so it scores **PASS**; the unrequested `transfer_to_human_agents` call changes no DB state and appears in no `reward_basis` component, so it is invisible to the grade. (The task's one `nl_assertion` is diagnostic-only — not in `reward_basis` — and checks cancellation, not transfers.)
 
 ---
 
