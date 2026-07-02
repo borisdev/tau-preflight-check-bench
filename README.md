@@ -6,7 +6,7 @@
 
 We extend τ³-bench from evaluating only the terminal DB state to also evaluating **how well the agent resolves ambiguity about the user's unobserved problem — by asking, before it acts.**
 
-**Ambiguity is the gap between the true `ProblemSpec` and the agent's `ProblemSpecBelief`.** Every requirement is a typed slot the belief marks *resolved* or `UNKNOWN`; where the true `ProblemSpec` fixes a value (`transfer_requested = False`) but the `ProblemSpecBelief` still reads `UNKNOWN`, that slot is unresolved — and acting on it is the bug. Terminal-state grading can't see that; a typed belief can.
+**Ambiguity is the gap between the true `ProblemSpec` and the agent's `ProblemSpecBelief`** — two typed representations we [define below](#problemspec-and-problemspecbelief). Every requirement is a typed slot the belief marks *resolved* or `UNKNOWN`; where the true `ProblemSpec` fixes a value (`transfer_requested = False`) but the `ProblemSpecBelief` still reads `UNKNOWN`, that slot is unresolved — and acting on it is the bug. Terminal-state grading can't see that; a typed belief can.
 
 **Why it matters for AI quality.**
 - **A more precise, deterministic grader** — the next section shows a concrete bug it catches.
@@ -21,7 +21,7 @@ The agent correctly refuses an ineligible refund, then transfers the user to a h
 
 ## ProblemSpec and ProblemSpecBelief
 
-We add two structured entities — the same shape in two roles: a true **`ProblemSpec`** (the target) and the agent's **`ProblemSpecBelief`** (its estimate). Handing the agent the spec's *shape* — not its per-task values — also makes it a better agent: it knows which questions to ask before acting.
+We introduce two typed representations — an instrumentation layer over τ³. They are the same shape in two roles: a true **`ProblemSpec`** (the target) and the agent's **`ProblemSpecBelief`** (its estimate). Handing the agent the spec's *shape* — not its per-task values — also makes it a better agent: it knows which questions to ask before acting.
 
 **From prose to a checkable spec.** The raw task is one free-text blob:
 
