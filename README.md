@@ -10,7 +10,7 @@ We define **ambiguity** as the gap between the true `ProblemSpec` and the agent'
 
 **Why it matters for AI quality.**
 - **A more precise, deterministic grader** — the next section shows a concrete bug it catches.
-- **Better-behaved agents** — they resolve ambiguity before acting, not after. [ProblemSpec vs ProblemSpecBelief →](#problemspec-and-problemspecbelief)
+- **Better-behaved agents** — when a required slot is `UNKNOWN`, they ask, not act on a guess. [ProblemSpec vs ProblemSpecBelief →](#problemspec-and-problemspecbelief)
 - **`ProblemSpec` shape captures expertise** in policy and tacit communication knowledge. [Three concrete examples →](#enriching-the-spec-with-expertise-three-examples)
 
 ---
