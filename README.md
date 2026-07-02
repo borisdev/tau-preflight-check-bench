@@ -4,7 +4,7 @@
 
 ## What is this about?
 
-We extend τ³-bench from evaluating only the terminal DB state to also evaluating the **convergence (or divergence) of the agent's `ProblemSpecBelief` toward the user's true `ProblemSpec`** — the understanding the agent forms in order to act.
+We extend τ³-bench from evaluating only the terminal DB state to also evaluating the **convergence (or divergence) of the agent's `ProblemSpecBelief` toward the user's true `ProblemSpec`** — how well the agent resolves the `UNKNOWN` slots of its belief, by asking the user, before it acts.
 
 **Why it matters for AI quality.**
 - **Better-behaved agents.** Two agents reaching the same end state can differ in whether they understood the problem, asked before acting, or respected constraints. Grading belief-convergence + constraints turns those *process* differences into signal — for eval *and* for training.
