@@ -8,7 +8,7 @@ We extend τ³-bench from evaluating only the terminal DB state to also evaluati
 
 **Why it matters for AI quality.**
 - **Better-behaved agents.**
-- **A more precise, deterministic grader.**
+- **A more precise, deterministic grader** — the next section shows a concrete bug it catches.
 - **`ProblemSpec` shape captures expertise in policy and tacit communication knowledge.**
 
 ---
