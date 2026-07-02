@@ -4,13 +4,9 @@ A per-turn **belief-state** instrumentation layer for τ-bench (the `tau2-bench`
 
 ---
 
-## The grader's blind spot
+## Motivation: The grader's belief blind spot causes a bug
 
-In airline **task 47** the agent correctly refuses an ineligible refund (**a pass**) — then transfers the user to a human, which the task forbade. That requirement was one clause buried in the free-text spec. Structured, it becomes a typed constraint the grader can check.
-
-## The fix
-
-The raw task is one prose blob; the refactor makes the target spec *and* the agent's evolving belief typed objects (`UNKNOWN` = a slot the agent hasn't resolved). Spec is `TASK_47_SPEC` in [`problem_spec.py`](https://github.com/borisdev/tau-belief-state-bench/blob/feat/structured-problemspec/src/tau2/data_model/problem_spec.py).
+**The τ³-bench grader is wrong on airline task 47.** The agent correctly refuses an ineligible refund, then transfers the user to a human — even though the task states *"you don't want to be transferred to another agent."* The grade is `PASS`. That requirement was one clause buried in the free-text `task_instructions`, so the grader never checks it. See the exact object below.
 
 Raw τ³ task — one prose blob:
 
@@ -22,7 +18,11 @@ Raw τ³ task — one prose blob:
 "known_info": "Sophia Silva / sophia_silva_7557 / H8Q05L"
 ```
 
-Three typed instances — the target the agent must reach, and its belief at the start vs. the moment it acted:
+## Intermediate artifacts fix: ProblemSpec and BeliefState
+
+By structuring `task_instructions` into a **`ProblemSpec`**, and the agent's convergence to it across dialog turns as a **`BeliefState`**, we can observe the agent's evolving belief — and open an opportunity to gather expert knowledge on the correct problem spec (`UNKNOWN` = a slot the agent hasn't resolved). Spec is `TASK_47_SPEC` in [`problem_spec.py`](https://github.com/borisdev/tau-belief-state-bench/blob/feat/structured-problemspec/src/tau2/data_model/problem_spec.py).
+
+Three typed instances — the spec the agent must reach, and its belief at the start vs. the moment it acted:
 
 <table>
 <tr>
@@ -55,7 +55,7 @@ a checkable predicate.
 <td>
 
 ```python
-AgentBelief(
+BeliefState(
  turn=1,
  goal="cancel"
    " + refund",
@@ -71,7 +71,7 @@ nothing resolved yet.
 <td>
 
 ```python
-AgentBelief(
+BeliefState(
  turn=12,
  refund_eligible=
    False,
@@ -90,7 +90,7 @@ was still UNKNOWN.**
 </tr>
 </table>
 
-### Candidate fixes
+### Intermediate artifacts open opportunities to integrate expertise into the grader and the AI
 
 Three small ways to make the grader catch task 47. Each needs **one piece of expert knowledge the written policy doesn't contain** — and that input is the thing to elicit:
 
@@ -99,8 +99,6 @@ Three small ways to make the grader catch task 47. Each needs **one piece of exp
 | Default every belief slot to `UNKNOWN`; add a system invariant — *never transfer without an explicit YES*. | The agent can't treat an unresolved slot as consent; escalation now requires positive evidence. | the **invariant** |
 | In the `ProblemSpec`, declare that a `transfer` requires `transfer_requested == True`. | *Acting while `UNKNOWN`* becomes a checkable violation, not a judgment call. | the **action precondition** |
 | Grader penalty when an escalating action fires under `UNKNOWN`. | Turns the belief signal into a reward component the lab can use in eval or training. | the **severity weight** |
-
-None of these is prompt engineering the lab can do alone — each is a rule, a precondition, or a weight that a domain expert supplies.
 
 ---
 
@@ -204,7 +202,7 @@ class TaskInstructions(BaseModel):
         return render_prompt(self.general_instructions, self.problem_spec)
 ```
 
-The concrete task-47 before/after is shown at the top in [**The fix**](#the-fix). The full per-turn belief trajectory and the graded verdict are in [`poc/CASE_STUDY.md`](poc/CASE_STUDY.md).
+The concrete task-47 typed structures are shown at the top under [**Intermediate artifacts fix**](#intermediate-artifacts-fix-problemspec-and-beliefstate). The full per-turn belief trajectory and the graded verdict are in [`poc/CASE_STUDY.md`](poc/CASE_STUDY.md).
 
 The same object is the source for the user-sim prompt, the grader's constraint checks, and the belief-comparison target. It is **not** given to the agent — the agent must still infer requirements through dialogue, so the belief measurement is not leaked. First slice (models + `ConstraintEvaluator` + the task-47 flip) is on branch `feat/structured-problemspec`.
 
