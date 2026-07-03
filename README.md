@@ -80,7 +80,7 @@ Because the `ProblemSpec` is versioned, executable **policy-as-code**, each addi
 
 Subject-matter experts (SMEs) **hydrate** these offline: for each tool action, *which slots must be grounded, to what value, and how severe if skipped.* That tacit expertise is the part the written policy doesn't contain and a lab can't self-serve. At runtime the agent **consults** them before firing a tool: where a required slot is `UNKNOWN`, it **asks** instead of guessing.
 
-#### Epistemic preconditions τ³ can't grade — airline customer service
+#### Some example epistemic preconditions τ³ can't grade in airline customer service
 
 Each is a `knows(slot == …)` guard on the belief state. Violations are **DB-invisible**: the terminal database looks identical to a correct run, so state-grading passes them.
 
