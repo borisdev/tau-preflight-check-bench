@@ -2,11 +2,11 @@
 
 *How well does the agent get on the same page with the user?*
 
-**The programme.** This work is part of a broader push in the AI eval community: using **failure-pattern analysis** to target bad AI behaviors that can be remedied with input from human domain experts.
+We extend τ³-bench from grading only the terminal database state to also grading whether the agent got on the same page with the user before acting.
 
-**The behavior.** Broadly, we work on one class of it — **acting without getting on the same page**: without consent, understanding, or asking. τ³'s setting is airline support, but the pattern is general — it's the same failure a coding, medical, or finance agent makes when it acts before it understands.
+We study one broad failure pattern: acting without sufficient consent or understanding, rather than asking first. τ³-bench uses airline support, but the pattern is general — the same failure occurs when coding, medical, or financial agents act before they understand.
 
-**This benchmark.** We extend τ³-bench from grading only the terminal DB state → to also grading whether the agent got on the same page before it acted.
+This work is part of a broader effort in the AI evaluation community to identify recurring failure patterns and target behaviors that can be improved with input from human domain experts.
 
 ## Innovation
 
