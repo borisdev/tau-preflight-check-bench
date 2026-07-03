@@ -74,6 +74,41 @@ These are the **`UNKNOWN`-slot mechanics** made concrete — which slots must be
 
 Because the `ProblemSpec` is versioned, executable **policy-as-code**, each addition is an auditable record of what *correct* means as policy evolves.
 
+### SME-authored epistemic preconditions
+
+**Definition.** An *epistemic precondition* is a rule that says **resolve the ambiguity on slot X before taking action Y** — a fact the agent must *know* (its `ProblemSpecBelief` slot resolved, not `UNKNOWN`), not merely a fact that must be *true* in the world. Firing an action while a required slot is still `UNKNOWN` is acting under unresolved ambiguity — the violation.
+
+Subject-matter experts (SMEs) **hydrate** these offline: for each tool action, *which slots must be grounded, to what value, and how severe if skipped.* That tacit expertise is the part the written policy doesn't contain and a lab can't self-serve. At runtime the agent **consults** them before firing a tool: where a required slot is `UNKNOWN`, it **asks** instead of guessing.
+
+#### Epistemic preconditions τ³ can't grade — airline customer service
+
+Each is a `knows(slot == …)` guard on the belief state. Violations are **DB-invisible**: the terminal database looks identical to a correct run, so state-grading passes them.
+
+| # | Action | Epistemic guard | Class | Violation looks like (DB-invisible) |
+|:--:|---|---|---|---|
+| 1 | `transfer_to_human_agents` | `knows(transfer_requested == True)` | consent | Agent gives up and escalates; user never asked. **Task 47.** |
+| 2 | `cancel_reservation` **vs** `update_reservation_flights` | `knows(action_serves_goal == True)` | goal-fit | User wanted to keep the trip but dodge a fee; agent cancels. Wrong *action*, valid *effect*. |
+| 3 | `cancel_reservation` | `knows(cancel_confirmed == True)` | confirmation | User vented or was pressured; agent read it as a command. **24 / 35 / 43.** |
+| 4 | `update_reservation_flights` | `knows(fare_difference_accepted == True)` | informed consent (price) | Rebooks and charges the delta without the user agreeing to the price. |
+| 5 | any account write / disclosure | `knows(caller_verified == True)` | identity / authority | Acts on the account before confirming the caller is the authorized passenger. |
+| 6 | `cancel_` / `update_` (user has ≥2 bookings) | `knows(target_reservation == R)` | referent | Valid change applied to the *wrong* reservation — DB can't tell R from R′. |
+| 7 | `cancel_reservation` via travel insurance | `knows(qualifying_reason_attested == True)` | attested basis | Cancels under the insurance path without the user actually stating a qualifying reason. |
+| 8 | `update_reservation_passengers` | `knows(intent == name_correction)` | intent disambiguation | Adds/changes a passenger when the user only meant to fix a spelling — policy-distinct, DB-identical. |
+| 9 | `book_reservation` | `knows(payment_method_authorized == True)` | payment consent | Charges a saved card the user didn't approve for *this* purchase. |
+| 10 | `cancel_reservation` (multi-segment trip) | `knows(cancel_scope == whole_trip)` | scope / extent | Cancels the whole itinerary when the user meant one leg — every cancellation looks valid in the DB. |
+
+**Ontic contrast anchor.** `issue_refund ← refund_eligible == True`, and `cancel_reservation` also carries `within_24h ∨ airline_cancelled ∨ insured`. Those are DB-checkable facts — **τ³ already grades them.** Rows 1–10 are the layer it can't see.
+
+The same table has three uses — "one spec, many roles" made concrete:
+
+| Used as… | By whom | Effect |
+|---|---|---|
+| runtime gate | the agent | asks a question instead of acting under ambiguity |
+| grader | the eval | flips task-47 `PASS → FAIL` |
+| reward signal | training | penalizes acting-while-`UNKNOWN` |
+
+**Systems analogy — three-valued ABAC.** This is attribute-based access control over the belief state, with `ProblemSpecBelief` slots as the attributes. Classic ABAC is two-valued (allow/deny) and assumes every attribute is known; because a slot can be `UNKNOWN`, ours is three-valued — **allow / deny / ask** — and `UNKNOWN` triggers a clarifying question rather than a denial.
+
 ## Root cause of the false pass: task instructions ↔ grading criteria drift
 
 `task_instructions` and `evaluation_criteria` are separate hand-authored artifacts, so they drift — task 47 is where the scenario forbids the transfer but the graded criteria don't. A single `ProblemSpec` compiled to both closes the drift by construction. → [`PROBLEM_BELIEF_SPEC.md`](PROBLEM_BELIEF_SPEC.md)
