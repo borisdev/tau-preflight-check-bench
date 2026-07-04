@@ -15,12 +15,10 @@
 **Our objective.** A high-level plan in three phases, where Phases 2 and 3 depend on Phase 1 — the work in this paper.
 
 > 1. **Flag** *(this paper)* — use evals to surface where the agent is ignorant of the user's problem.
-> 2. **Resolve** — turn each ignorance pattern into a human-authored **action-precondition rule** the grader can score.
-> 3. **Build** *(AI builder)* — use those rules to **gate** the agent, shrinking the gap between its belief of the user's problem and the actual problem.
->
-> Two concrete examples (Phases 1–2):
-> - **Unrequested transfer (task 47).** *Flag:* the agent transfers the user to a human; the grader sees an unchanged DB and passes it — though the task said *"don't transfer."* *Resolve:* an SME adds `transfer_to_human` requires `belief.transfer_requested == True`, and it now grades **FAIL**.
-> - **Cancel without confirmation.** *Flag:* the agent cancels a booking after the user only vented (*"this is ridiculous"*); the cancellation looks valid, so the grader passes it. *Resolve:* an SME adds `cancel_reservation` requires `belief.cancel_confirmed == True`.
+> 2. **Resolve** — turn each ignorance pattern into a human-authored **action-precondition rule** the grader can score. Two examples of this expert knowledge:
+>    - `transfer_to_human` requires `belief.transfer_requested == True` — the agent must *know the user asked* before escalating (task 47).
+>    - `cancel_reservation` requires `belief.cancel_confirmed == True` — the agent must *confirm intent*, not act on venting (*"this is ridiculous"*).
+> 3. **Build** *(AI builder)* — turn each rule into ambiguity-reduction logic: when the required belief is `UNKNOWN`, **ask** before acting — shrinking the gap between the agent's belief of the user's problem and the actual problem.
 
 ## Glossary
 
