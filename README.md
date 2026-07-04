@@ -10,7 +10,7 @@ We ran Claude Haiku on τ³ airline task 47 and found a grading failure:
 - **What τ³-bench scored:** **PASS** — the transfer left the database unchanged, and the *don't-transfer* rule sits in free-text `task_instructions`, not in the grader's structured criteria.
 - **The problem:** a real, stated user requirement was violated — invisibly. A **silent false-pass**. ([root cause →](#root-cause-of-the-false-pass-task-instructions--grading-criteria-drift))
 
-**How this might help customer-service AI quality.** Surfacing these failures turns them into concrete questions for human subject-matter experts: *for a given action, what must an AI agent sufficiently understand about its user's state of mind before committing — so it doesn't harm or inconvenience the user?* A synthetic answer, per action:
+**How surfacing these failure patterns might help AI quality in customer-service.** These failures turn into concrete questions for human subject-matter experts: *for a given action, what must an AI agent sufficiently understand about its user's state of mind before committing — so it doesn't harm or inconvenience the user?* A synthetic answer, per action:
 
 | Agent action | Preflight checks the agent must establish first | Example failure caught |
 |---|---|---|
