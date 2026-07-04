@@ -36,6 +36,17 @@ Our core move — an action may require the agent to *know* something, not merel
 - **FMEA** (failure mode and effects analysis): enumerate each action's failure mode and severity — the origin of our per-guard **severity** weight.
 - **ABAC / policy-as-code** (OPA, AWS IAM): the runtime gate is attribute-based access control over the belief state, extended to three-valued **allow / deny / ask**. See [`docs/epistemic-preconditions.md`](docs/epistemic-preconditions.md).
 
+## 4. Clarification & information gain (closest prior art)
+
+**Deng et al. 2026, "Uncertainty-Aware Clarification in LLM Agents with Information Gain"** ([arXiv:2606.03135](https://arxiv.org/abs/2606.03135)) is the nearest neighbor: like us it works on τ-Bench, treats the user's goal as a latent variable, and rewards the agent for reducing uncertainty about it before acting. Their **Information Gain Reward** — the log-likelihood shift of the ground-truth goal under the model after a clarifying question — is an instantiation of the **value of information** (§3). We share that premise, and differ on representation, mechanism, and what we measure:
+
+- **Reactive vs. proactive.** Their clarifier fires *reactively, when tool-execution feedback reveals missing information*. Ours is a *proactive precondition* checked **before** the action fires. This matters concretely: **task 47 produces no failing tool call** — the transfer succeeds and leaves the DB unchanged — so a reactive-on-feedback clarifier structurally cannot detect it. A precondition gate can.
+- **Flat goal string vs. typed spec.** Their target is a normalized natural-language goal string; the belief is implicit in the model's token-level probabilities ("no explicit discrete goal space or slot inventory"). Ours is a typed `ProblemSpec` with per-field **ontic/epistemic preconditions** and explicit `UNKNOWN` slots — auditable and per-action.
+- **Agent method vs. eval + policy.** They contribute a clarifier-training method and a reward; success is measured Pass@1. We contribute (a) an **eval** that catches the false-pass outcome-grading misses, and (b) a **per-action enumeration** of which fields must be resolved — expert-authored. They enumerate no per-action precondition policy.
+- **They defer our exact target.** Their failure analysis (App. 6.5) notes a case where "clarification resolves ambiguity but execution violates policy," concluding it "motivat[es] future work on jointly optimizing clarification and execution." That clarify-succeeds-yet-action-violates case is precisely what our precondition grader scores.
+
+**Complementary, not competing.** Their clarifier is a *Phase-3* mechanism; it presupposes a goal you can already score and knowing *which* latent fields matter per action — exactly the eval and enumeration we provide. Their agent method rides on our eval-and-policy layer.
+
 ## Beyond AI
 
 - **The Good Regulator theorem** (Conant & Ashby, 1970): *"Every good regulator of a system must be a model of that system."* To act well on a hidden problem you must model it — so to *grade* whether an agent will act well, grade its **model of the problem**, not just its final move.
