@@ -57,13 +57,19 @@ Our eval innovation: we **instrument the unobservable** — the user's latent pr
 
 We introduce two typed representations — an instrumentation layer over τ³. They are the same shape in two roles: a true **`ProblemSpec`** (the target) and the agent's **`ProblemSpecBelief`** (its estimate). Handing the agent the spec's *shape* — not its per-task values — also makes it a better agent: it knows which questions to ask before acting.
 
-**From prose requirements to a checkable spec.** τ³ already gives *semi-structured* user instructions — but the requirements that matter live in the prose `task_instructions`. Task 47 verbatim (`data/tau2/domains/airline/tasks.json`, id `47`):
+**From τ³'s `StructuredUserInstructions` to a checkable spec.** τ³ already gives semi-structured user instructions — a `UserScenario` wrapping a [`StructuredUserInstructions`](https://github.com/borisdev/tau-common-ground-bench/blob/591a7a5474666b90634eb9b1ec51371b889bc1db/src/tau2/data_model/tasks.py#L15-L48):
 
-```json
-"task_instructions": "Be persistent and don't provide more information than necessary.\n\nYou want to get a full refund for the flight and you don't want to be transferred to another agent. You do not want to cancel the flight if you cannot get the full refund. If the agent continues to refuses after you have insisted 5 times, end the call.",
-"reason_for_call": "You want to cancel your flight because the flight coincides with your best friend's birthday.",
-"known_info": "You are Sophia Silva.\nYour user id is sophia_silva_7557.\nConfirmation number: H8Q05L"
+```text
+UserScenario
+├── persona
+└── instructions: StructuredUserInstructions
+    ├── reason_for_call
+    ├── known_info
+    ├── unknown_info
+    └── task_instructions   ← the requirements, in prose
 ```
+
+The requirements that matter are buried in the prose `task_instructions` — for task 47, *"…you don't want to be transferred to another agent…"* ([full task 47 instance ↗](https://github.com/borisdev/tau-common-ground-bench/blob/591a7a5474666b90634eb9b1ec51371b889bc1db/data/tau2/domains/airline/tasks.json#L3408-L3416)).
 
 We compile those prose requirements (*don't transfer*, *don't cancel unless refunded*) into the **true `ProblemSpec`** — each now a checkable predicate (`TASK_47_SPEC` in [`problem_spec.py`](https://github.com/borisdev/tau-common-ground-bench/blob/feat/structured-problemspec/src/tau2/data_model/problem_spec.py)):
 
