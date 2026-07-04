@@ -8,7 +8,7 @@
 - **What AI builders need.** Expert-authored rules specifying what an agent must understand or confirm before each consequential action.
 - **This paper's objective.** Analyze recurring failure patterns, identify the unresolved knowledge behind each bad action, and convert that gap into a focused question for domain experts to answer.
 
----
+## Overview
 
 **AI benchmark.** We extend τ³-bench from grading only the terminal database state to also grading whether the agent got on the same page with the user before acting. τ³-bench uses airline support, but the pattern is general — the same failure occurs when coding, medical, or financial agents act before they understand.
 
