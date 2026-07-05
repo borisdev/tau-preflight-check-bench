@@ -103,15 +103,7 @@ The field is optional (`default None`), so existing tasks are unaffected and the
 +   ])
 ```
 
-Each rule quotes the task verbatim (not invented); the flip is **controlled** — same task, prose, trajectory, and agent output, only the grader changes:
-
-```text
-same task · same simulator prose · same trajectory · same agent output
-        ├── τ³ grader (DB / outcome) .......... PASS
-        └── structured-requirements grader .... FAIL   (transfer fired; authorization = DENIED; turn 12)
-```
-
-Full flip mechanics + independent verification: [`docs/pilot-details.md`](docs/pilot-details.md).
+The `StructuredRequirementsEvaluator` flips task 47 `PASS → FAIL` — a controlled result (FAQ: *did you invent a rule?* · *a different conversation?*). Mechanics + verification: [`docs/pilot-details.md`](docs/pilot-details.md).
 
 Epistemic precondition in depth (ontic vs epistemic, SME hydration, the PDDL / Pydantic action frame): [`docs/epistemic-preconditions.md`](docs/epistemic-preconditions.md).
 
@@ -169,6 +161,28 @@ A proof-of-concept, not a measured rate. We re-scored 6 τ³ airline tasks; the 
 | 39 | cancels only refund-eligible flights | PASS | no violation |
 
 Full mechanics + verification: [`docs/pilot-details.md`](docs/pilot-details.md).
+</details>
+
+<details>
+<summary><b>Did you invent a rule to force a failure?</b></summary>
+
+No — the rule is **derived from the task's own `task_instructions`**, not authored by us. An LLM lifts the prose requirement into a typed constraint, and every constraint carries a `source_quote` — the verbatim task text it came from (here, *"you don't want to be transferred to another agent"*). So it's an **implicit** requirement made **explicit**, not an invented one. A deterministic check rejects any constraint whose `source_quote` isn't a substring of the cited field.
+
+This also marks where the real work is: a requirement stated only in prose is exactly the spot **ripe to elicit an SME** for the real-world protocol rule a complete preflight policy needs (Phase 2 — *should-exist but omitted*).
+</details>
+
+<details>
+<summary><b>Did you get a different verdict by running a different conversation?</b></summary>
+
+No — it's **controlled**. We re-score the *same recorded trajectory*; task, simulator prose, trajectory, and agent output are all held fixed, and **only the grader changes**. So the flip is grader representation, not a changed conversation:
+
+```text
+same task · same simulator prose · same trajectory · same agent output
+        ├── τ³ grader (DB / outcome) .......... PASS
+        └── structured-requirements grader .... FAIL   (transfer fired; authorization = DENIED; turn 12)
+```
+
+Full mechanics + independent verification: [`docs/pilot-details.md`](docs/pilot-details.md).
 </details>
 
 <details>
