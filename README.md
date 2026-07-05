@@ -103,9 +103,7 @@ The field is optional (`default None`), so existing tasks are unaffected and the
 +   ])
 ```
 
-Every rule carries a `source_quote` (the red line above) — the requirement is **lifted from the task, not invented**.
-
-**Result.** The same recorded trajectory, scored by both graders. Adding the field changes nothing the agent or simulator sees, so any verdict difference is grader representation, not a changed conversation:
+Each rule quotes the task verbatim (not invented); the flip is **controlled** — same task, prose, trajectory, and agent output, only the grader changes:
 
 ```text
 same task · same simulator prose · same trajectory · same agent output
