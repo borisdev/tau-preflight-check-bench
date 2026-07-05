@@ -1,6 +1,6 @@
 # Epistemic preconditions — systems framing
 
-Background for the **SME-authored policy** ([README](../README.md#sme-authored-policy-what-ambiguity-to-resolve-before-acting)) — the epistemic preconditions on what ambiguity must be resolved before an agent acts. The README carries the definition and the airline example table; this doc carries the framing: why state-grading is blind to these, what the same artifact buys you, and the systems analogy.
+The epistemic preconditions — what ambiguity must be resolved before an agent acts. The README front page carries the motivating task-47 example and the 5-row SME table; this doc carries the depth: the definition, the PDDL / Pydantic action model (below), why state-grading is blind to these, what the same artifact buys you, and the systems analogy.
 
 ## Ontic vs epistemic — why τ³ is blind by construction
 
@@ -62,3 +62,32 @@ The table says *which* slots gate action `T`; it does not fill them. A **belief-
 Enumerating an agent's actions is cheap — the tool surface is finite. Enumerating *which slots must be grounded before each action, to what value, and how severe if skipped* is the expensive, expert-authored part, and it's precisely what the written policy omits and a lab can't self-serve.
 
 The benchmark is the discovery mechanism: every false-pass it surfaces is a guard the SMEs haven't authored yet. **Run → false-pass → SME adds the row → table grows.** That's a flywheel, not a one-shot deliverable.
+
+---
+
+## SME-authored policy: what ambiguity to resolve before acting  (moved from README)
+
+**Definition.** *Epistemic* means **about what the agent knows** — as opposed to *ontic*, about what is **true in the world**. So an *epistemic precondition* is a rule that says **resolve the ambiguity on slot X before taking action Y** — a fact the agent must *know* (its `ProblemSpecBelief` slot resolved, not `UNKNOWN`), not merely a fact that must be *true*. Firing an action while a required slot is still `UNKNOWN` is acting under unresolved ambiguity — the violation.
+
+Subject-matter experts (SMEs) **hydrate** these offline: for each tool action, *which slots must be grounded, to what value, and how severe if skipped.* That tacit expertise is the part the written policy doesn't contain and a lab can't self-serve. At runtime the agent **consults** them before firing a tool: where a required slot is `UNKNOWN`, it **asks** instead of guessing.
+
+**Theoretical frame — a PDDL action with an epistemic precondition.** Each tool is a [PDDL](https://en.wikipedia.org/wiki/Planning_Domain_Definition_Language) action: name, parameters, **preconditions**, effects. Classic preconditions are *ontic* — facts about the world. Our one extension is the **epistemic precondition**: a fact the agent must *know* (a belief slot resolved, not `UNKNOWN`) before the action fires. Task 47, as a Pydantic model:
+
+```python
+class Action(BaseModel):
+    name: str
+    params: list[str]
+    ontic_pre: list[str]      # world facts — τ³ can check these from the DB
+    epistemic_pre: list[str]  # belief slots that must be resolved (not UNKNOWN)
+    effect: str
+
+transfer_to_human = Action(
+    name="transfer_to_human",
+    params=["user"],
+    ontic_pre=["issue_unresolved"],        # DB-checkable
+    epistemic_pre=["transfer_requested"],  # gate: belief.transfer_requested must be resolved
+    effect="transferred",
+)
+```
+
+Each action's `epistemic_pre` field holds the epistemic preconditions τ³'s DB grade can't see. (Related: [PDDL-Mind](https://arxiv.org/abs/2604.17819) makes the belief state explicit in PDDL for theory-of-mind accuracy; we extend belief from a *tracked* quantity to an *action precondition*.)

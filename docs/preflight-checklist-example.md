@@ -4,7 +4,7 @@
 > 1. **bound to the actual τ³ airline tool surface** — several rows are sub-cases of one tool (e.g. *cancel one leg* = `cancel_reservation` + scope) or may not be distinct τ³ tools at all (*close the case*, *accept alternate airport*); and
 > 2. **traced to the airline policy document** — the anti-circularity requirement (each check should be justifiable from the policy the agent is already given, not invented).
 >
-> The verified, tool-bound, policy-traced pack is future work. This is here so a reader can see what the enumeration looks like. The current *verified* subset lives in the README's [SME-authored policy table](../README.md#sme-authored-policy-what-ambiguity-to-resolve-before-acting).
+> The verified, tool-bound, policy-traced pack is future work. This is here so a reader can see what the enumeration looks like. The nearest current material is the README's front-page 5-row example table and [`epistemic-preconditions.md`](epistemic-preconditions.md).
 
 | Agent action | Preflight checks the agent must establish first | Example failure caught |
 |---|---|---|

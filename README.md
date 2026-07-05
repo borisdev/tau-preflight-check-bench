@@ -33,7 +33,7 @@ Our eval innovation: we **instrument the unobservable** — the user's latent pr
 **Why it matters for AI quality.**
 - **A more precise, deterministic grader** — the task-47 `PASS` above is a real bug it catches on a live τ³ airline task.
 - **Better-behaved agents** — when a required `ProblemSpecBelief` slot is `UNKNOWN`, the agent asks rather than acting on a guess. [ProblemSpec vs ProblemSpecBelief →](#problemspec-and-problemspecbelief)
-- **Human expertise becomes reusable data** — the shape of the `ProblemSpec` lets us collect expert judgment and encode it as **human-expert data** that both grades and gates agent behavior. [SME-authored policy →](#sme-authored-policy-what-ambiguity-to-resolve-before-acting)
+- **Human expertise becomes reusable data** — the shape of the `ProblemSpec` lets us collect expert judgment and encode it as **human-expert data** that both grades and gates agent behavior. [epistemic-precondition details →](docs/epistemic-preconditions.md)
 
 ---
 
@@ -54,7 +54,7 @@ Our eval innovation: we **instrument the unobservable** — the user's latent pr
 - **Epistemic / belief ambiguity** *(a known field with an unknown value)* — the field **exists** in the shape but its value is `UNKNOWN` in the agent's belief, and the agent acts without resolving it. *We know the shape, not the value* — the agent can fix this at runtime by **asking** (Phase 3). Distinguish from **ignorance** (the field is missing entirely) and from τ³'s ambiguity ↓.
 - **Ambiguous instructions** *(τ³ — not ours)* — an underspecified *task prompt* that makes the **simulated user** behave nondeterministically across trials; τ³ fixed these ([τ³ task-fixes](https://taubench.com/blog/tau3-task-fixes.html)). That's ambiguity in the **task authoring** (author ↔ simulator); *epistemic/belief ambiguity* is in the **agent's belief** (agent ↔ user) and survives even a τ³-clean task like 47.
 - **Preflight check** — the per-action checklist of epistemic preconditions the agent must confirm *before* firing a consequential action; if any required belief is `UNKNOWN`, it **halts and asks**. (After the aviation preflight checklist; cf. Gawande's *Checklist Manifesto*, FMEA.)
-- **Gating / grading** — using an epistemic precondition at runtime (**gate**: ask vs. act) and in eval (**grade**: pass vs. fail). [SME-authored policy →](#sme-authored-policy-what-ambiguity-to-resolve-before-acting)
+- **Gating / grading** — using an epistemic precondition at runtime (**gate**: ask vs. act) and in eval (**grade**: pass vs. fail). [epistemic-precondition details →](docs/epistemic-preconditions.md)
 - **PDDL** — Planning Domain Definition Language; models an action as name / parameters / preconditions / effects. We extend its preconditions with the epistemic kind (related: [PDDL-Mind](https://arxiv.org/abs/2604.17819)).
 
 Deeper theory and full prior art (POMDP belief states, assistance games, epistemic planning, Design by Contract): [`FRAMING.md`](FRAMING.md). Design notes — the four content types (requirement / preference / understanding / consent), informed consent as a bounded slice of causal-model alignment, and the harm-anchored SME elicitation pipeline: [`docs/design-notes-what-to-establish.md`](docs/design-notes-what-to-establish.md).
@@ -77,7 +77,22 @@ UserScenario
     └── task_instructions   ← the requirements, in prose
 ```
 
-The requirements that matter are buried in the prose `task_instructions` — for task 47, *"…you don't want to be transferred to another agent…"* ([full task 47 instance ↗](https://github.com/borisdev/tau-preflight-check/blob/591a7a5474666b90634eb9b1ec51371b889bc1db/data/tau2/domains/airline/tasks.json#L3408-L3416)).
+For task 47, that `user_scenario` is, verbatim ([source ↗](https://github.com/borisdev/tau-preflight-check/blob/591a7a5474666b90634eb9b1ec51371b889bc1db/data/tau2/domains/airline/tasks.json#L3408-L3416)):
+
+```json
+"user_scenario": {
+  "persona": null,
+  "instructions": {
+    "task_instructions": "Be persistent and don't provide more information than necessary. \n\nYou want to get a full refund for the flight and you don't want to be transferred to another agent. You do not want to cancel the flight if you cannot get the full refund. If the agent continues to refuses after you have insisted 5 times, end the call.",
+    "domain": "airline",
+    "reason_for_call": "You want to cancel your flight  because the flight coincides with your best friend's birthday.",
+    "known_info": "You are Sophia Silva.\nYour user id is sophia_silva_7557.\nConfirmation number: H8Q05L",
+    "unknown_info": null
+  }
+}
+```
+
+The requirement that matters is buried in the prose `task_instructions` — *"…you don't want to be transferred to another agent…"*.
 
 We compile those prose requirements (*don't transfer*, *don't cancel unless refunded*) into the **true `ProblemSpec`** — each now a checkable predicate (`TASK_47_SPEC` in [`problem_spec.py`](https://github.com/borisdev/tau-preflight-check/blob/feat/structured-problemspec/src/tau2/data_model/problem_spec.py)):
 
@@ -108,32 +123,7 @@ At turn 12 the agent calls `transfer_to_human_agents()` while `transfer_requeste
 
 <sub>The belief is the same shape as the `ProblemSpec` (minus `turn`); the live version also tags each slot with provenance — `status: inferred/assumed`, `evidence_turn` — to separate a resolved fact from a guess.</sub>
 
-### SME-authored policy: what ambiguity to resolve before acting
-
-**Definition.** *Epistemic* means **about what the agent knows** — as opposed to *ontic*, about what is **true in the world**. So an *epistemic precondition* is a rule that says **resolve the ambiguity on slot X before taking action Y** — a fact the agent must *know* (its `ProblemSpecBelief` slot resolved, not `UNKNOWN`), not merely a fact that must be *true*. Firing an action while a required slot is still `UNKNOWN` is acting under unresolved ambiguity — the violation.
-
-Subject-matter experts (SMEs) **hydrate** these offline: for each tool action, *which slots must be grounded, to what value, and how severe if skipped.* That tacit expertise is the part the written policy doesn't contain and a lab can't self-serve. At runtime the agent **consults** them before firing a tool: where a required slot is `UNKNOWN`, it **asks** instead of guessing.
-
-**Theoretical frame — a PDDL action with an epistemic precondition.** Each tool is a [PDDL](https://en.wikipedia.org/wiki/Planning_Domain_Definition_Language) action: name, parameters, **preconditions**, effects. Classic preconditions are *ontic* — facts about the world. Our one extension is the **epistemic precondition**: a fact the agent must *know* (a belief slot resolved, not `UNKNOWN`) before the action fires. Task 47, as a Pydantic model:
-
-```python
-class Action(BaseModel):
-    name: str
-    params: list[str]
-    ontic_pre: list[str]      # world facts — τ³ can check these from the DB
-    epistemic_pre: list[str]  # belief slots that must be resolved (not UNKNOWN)
-    effect: str
-
-transfer_to_human = Action(
-    name="transfer_to_human",
-    params=["user"],
-    ontic_pre=["issue_unresolved"],        # DB-checkable
-    epistemic_pre=["transfer_requested"],  # gate: belief.transfer_requested must be resolved
-    effect="transferred",
-)
-```
-
-Each action's `epistemic_pre` field holds the epistemic preconditions τ³'s DB grade can't see. (Related: [PDDL-Mind](https://arxiv.org/abs/2604.17819) makes the belief state explicit in PDDL for theory-of-mind accuracy; we extend belief from a *tracked* quantity to an *action precondition*.)
+→ **The epistemic precondition in depth** — the *ontic* vs *epistemic* definition, the SME hydration model, and the PDDL / Pydantic action frame — is in [`docs/epistemic-preconditions.md`](docs/epistemic-preconditions.md), kept off this page so a first-time reader meets the basics first.
 
 
 ## Two failure patterns
@@ -152,7 +142,9 @@ The first funds the second: proving agents skip *stated* requirements opens the 
 
 ## Pilot: 6 airline tasks
 
-The **DB grade** is authoritative — recomputed with the real τ³ tools by replaying the agent's recorded tool calls against the ground-truth reference actions.
+**A small proof-of-concept, not a measured rate.** We ran the preflight check on **6 τ³ airline tasks** to see how often τ³'s own grader misses a latent user requirement.
+
+The **DB grade** is τ³'s authoritative verdict — we recompute it by replaying the agent's recorded tool calls against τ³'s ground-truth reference actions (using the real τ³ tools). Our added **belief / constraint** check then flags requirements that DB grade can't see.
 
 | Task | What the task tests | τ³ DB grade | Belief / constraint layer |
 |---|---|:--:|---|
