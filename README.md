@@ -61,17 +61,9 @@ Deeper theory and full prior art (POMDP belief states, assistance games, epistem
 
 ## Making τ³'s implicit requirements explicit
 
-τ³ buries the user's requirements in one overloaded prose field, `task_instructions`, and the grader checks only a structured *subset* of the scenario — so any requirement left in the prose is **invisible to grading**. τ-PreflightCheck adds **exactly one field** that turns those buried requirements into an **explicit, typed, grader-visible** artifact — the intermediate object the new grade depends on:
+τ³ buries the user's requirements in one prose field, `task_instructions`, and the grader checks only a structured *subset* of the scenario — so a requirement left in the prose is **invisible to grading**. τ-PreflightCheck lifts it into an **explicit, typed** field the grader checks. Watch the *same* requirement move from implicit prose (deleted from grading) to explicit type (now graded):
 
-```diff
-  StructuredUserInstructions          # what τ³ ships
-    domain, reason_for_call, known_info, unknown_info
-    task_instructions: str            # ← the requirements live here, in prose — the grader can't see them
-+   structured_requirements: StructuredUserRequirements
-+                                     # ← τ-PreflightCheck adds this: the same requirements, made explicit & grader-visible
-```
-
-**The requirement that's implicit today.** Task 47's `task_instructions`, verbatim ([source ↗](https://github.com/borisdev/tau-preflight-check/blob/591a7a5474666b90634eb9b1ec51371b889bc1db/data/tau2/domains/airline/tasks.json#L3408-L3416)) — the requirements are buried in one prose string. The line in **red** is a real, stated requirement τ³'s structured criteria never check — effectively **deleted** from what's graded:
+**Implicit — buried in prose.** Task 47's `task_instructions`, verbatim ([source ↗](https://github.com/borisdev/tau-preflight-check/blob/591a7a5474666b90634eb9b1ec51371b889bc1db/data/tau2/domains/airline/tasks.json#L3408-L3416)). The **red** line is a stated requirement τ³'s criteria never check — effectively **deleted** from what's graded:
 
 ```diff
 {
@@ -85,26 +77,24 @@ Deeper theory and full prior art (POMDP belief states, assistance games, epistem
 }
 ```
 
-**Made explicit** — we lift that buried requirement into typed `structured_requirements`, the intermediate artifact the grader checks, with the *correct* semantics and full provenance:
+**Explicit — lifted into a typed, gradeable field** (`structured_requirements`), with the *correct* semantics and provenance (each rule traces to its `source_quote` — the red line above):
 
-```python
-StructuredUserRequirements(
-  goal="obtain a full refund",
-  authorizations={
-    # explicit refusal — stronger than "no transfer was requested"
-    "transfer_to_human_agents": ConsentStatus.DENIED,
-    # conditional: cancel only if the world offers a full refund
-    "cancel_reservation": ConditionalAuthorization(
-        action="cancel_reservation", condition="full_refund_available"),
-  },
-  constraints=[
-    TaskConstraint(
-      id="task47.no_unwanted_transfer",
-      action="transfer_to_human_agents",
-      rule="must not transfer when transfer authorization is DENIED",
-      source_field="task_instructions",
-      source_quote="You don't want to be transferred to another agent."),
-  ])
+```diff
++ StructuredUserRequirements(
++   goal="obtain a full refund",
++   authorizations={
++     "transfer_to_human_agents": ConsentStatus.DENIED,          # explicit refusal ≠ "not requested"
++     "cancel_reservation": ConditionalAuthorization(            # conditional — the world decides the condition
++         action="cancel_reservation", condition="full_refund_available"),
++   },
++   constraints=[
++     TaskConstraint(
++       id="task47.no_unwanted_transfer",
++       action="transfer_to_human_agents",
++       rule="must not transfer when transfer authorization is DENIED",
++       source_field="task_instructions",
++       source_quote="You don't want to be transferred to another agent."),   # ← the red line above
++   ])
 ```
 
 Two semantics a looser encoding gets wrong: **`ConsentStatus.DENIED`** means the user *explicitly refused* — not merely that no transfer was requested; and cancellation is a **conditional** authorization — the *world* decides whether `full_refund_available` holds, so `refund_eligible` is a world fact, not the user's requirement. Every requirement carries a `source_quote`, so we can prove we **made an existing stated rule gradeable, not invented one.**
