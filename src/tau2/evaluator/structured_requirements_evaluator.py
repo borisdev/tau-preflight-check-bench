@@ -23,7 +23,7 @@ from __future__ import annotations
 
 from pydantic import BaseModel
 
-from tau2.data_model.structured_user_instructions_v2 import (
+from tau2.data_model.structured_requirements import (
     ConditionalAuthorization,
     ConsentStatus,
     StructuredUserRequirements,
@@ -137,6 +137,23 @@ def _check_constraint(
 class StructuredRequirementsEvaluator:
     """reward = 0 if ANY task-local requirement is violated, else 1 (mirrors τ³'s
     multiplicative pass/fail component style)."""
+
+    def evaluate_instructions(
+        self,
+        trajectory: list[dict],
+        instructions,
+    ) -> StructuredGradeResult | None:
+        """Grade a trajectory against a τ³ `StructuredUserInstructions`' attached
+        `user_preflight_requirements`. Returns None when no requirements are attached
+        (nothing for this grader to represent), so callers can cleanly skip the task.
+
+        `instructions` is duck-typed (only `.user_preflight_requirements` is read) so the
+        evaluator does not import `tasks.py`.
+        """
+        requirements = getattr(instructions, "user_preflight_requirements", None)
+        if requirements is None:
+            return None
+        return self.evaluate(trajectory, requirements)
 
     def evaluate(
         self,

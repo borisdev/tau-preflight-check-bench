@@ -22,7 +22,7 @@ from typing import Literal
 
 from pydantic import BaseModel
 
-from tau2.data_model.fixtures_v2 import get_v2_fixture
+from tau2.data_model.fixtures_preflight import get_preflight_fixture
 from tau2.evaluator.structured_requirements_evaluator import (
     StructuredRequirementsEvaluator,
     StructuredRequirementViolation,
@@ -83,13 +83,17 @@ def run() -> tuple[list[PairedGradeResult], list[str]]:
 
     for traj in trajectories:
         task_id = str(traj["task_id"])
-        v2 = get_v2_fixture(task_id)
-        if v2 is None:
+        instructions = get_preflight_fixture(task_id)
+        if instructions is None:
+            skipped.append(task_id)
+            continue
+
+        structured = evaluator.evaluate_instructions(traj["trajectory"], instructions)
+        if structured is None:
             skipped.append(task_id)
             continue
 
         tau3 = _tau3_score(traj, verified)
-        structured = evaluator.evaluate(traj["trajectory"], v2.structured_requirements)
 
         tau3_pass = tau3 >= 1.0
         results.append(

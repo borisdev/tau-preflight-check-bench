@@ -1,10 +1,11 @@
-"""V2 fixtures for the paired re-scoring pilot.
+"""Preflight-requirements fixtures for the paired re-scoring pilot.
 
-Each fixture builder loads the *real* τ³ scenario from the shipped task data and lifts it
-into `StructuredUserInstructionsV2`, so `task_instructions` is preserved byte-for-byte by
-construction (not retyped by hand). Only `structured_requirements` and `simulator_policy` are
-added, and every constraint's `source_quote` is a verbatim substring of the real task prose
-(assert this with `verify_provenance`).
+Each fixture builder loads the *real* τ³ scenario from the shipped task data and attaches a
+typed `StructuredUserRequirements` to it via the optional `user_preflight_requirements`
+field, so `task_instructions` (and every other scenario field) is preserved byte-for-byte by
+construction (not retyped by hand). Only `user_preflight_requirements` is added, and every
+constraint's `source_quote` is a verbatim substring of the real task prose (assert this with
+`verify_provenance`).
 
 Task 47 (airline) is the canonical "revealed but missed" case: the user states an explicit
 refusal to be transferred, but τ³'s DB/COMMUNICATE grader has no predicate for it.
@@ -15,11 +16,10 @@ from __future__ import annotations
 import json
 from functools import lru_cache
 
-from tau2.data_model.structured_user_instructions_v2 import (
+from tau2.data_model.structured_requirements import (
     ConditionalAuthorization,
     ConsentStatus,
     SimulatorPolicy,
-    StructuredUserInstructionsV2,
     StructuredUserRequirements,
     TaskConstraint,
     verify_provenance,
@@ -41,9 +41,11 @@ def _load_airline_task_instructions(task_id: str) -> StructuredUserInstructions:
     raise KeyError(f"airline task {task_id!r} not found in {tasks_path}")
 
 
-def build_task_47_v2() -> StructuredUserInstructionsV2:
-    """Task 47 lifted into V2. `task_instructions` comes straight from the source file, so the
-    byte-for-byte invariant holds by construction.
+def build_task_47() -> StructuredUserInstructions:
+    """Task 47's τ³ instructions with typed `user_preflight_requirements` attached.
+
+    `task_instructions` comes straight from the source file and is copied verbatim by
+    `model_copy`, so the byte-for-byte invariant holds by construction.
 
     Semantic distinctions honored (per handoff):
       * "don't want to be transferred" -> transfer authorization DENIED (an explicit refusal,
@@ -82,32 +84,32 @@ def build_task_47_v2() -> StructuredUserInstructionsV2:
                 source_quote="You do not want to cancel the flight if you cannot get the full refund.",
             ),
         ],
+        simulator_policy=SimulatorPolicy(
+            reveal_incrementally=True,
+            persistence_limit=5,
+            end_after_persistence_limit=True,
+        ),
     )
 
-    simulator_policy = SimulatorPolicy(
-        reveal_incrementally=True,
-        persistence_limit=5,
-        end_after_persistence_limit=True,
-    )
-
-    v2 = StructuredUserInstructionsV2.from_v1(
-        v1, structured_requirements=requirements, simulator_policy=simulator_policy
-    )
+    instructions = v1.model_copy(update={"user_preflight_requirements": requirements})
 
     # Fail fast if any hand-written source_quote drifts from the real prose.
-    problems = verify_provenance(v2)
+    problems = verify_provenance(instructions)
     if problems:
-        raise ValueError("task 47 V2 provenance check failed:\n" + "\n".join(problems))
-    return v2
+        raise ValueError(
+            "task 47 preflight provenance check failed:\n" + "\n".join(problems)
+        )
+    return instructions
 
 
-# Registry so the grader/PoC can look up a V2 fixture by the PoC's task_id string.
-V2_FIXTURES = {
-    "47": build_task_47_v2,
+# Registry so the grader/PoC can look up a preflight fixture by the PoC's task_id string.
+PREFLIGHT_FIXTURES = {
+    "47": build_task_47,
 }
 
 
-def get_v2_fixture(task_id: str) -> StructuredUserInstructionsV2 | None:
-    """Return the V2 instructions for a PoC task_id, or None if no fixture exists."""
-    builder = V2_FIXTURES.get(str(task_id))
+def get_preflight_fixture(task_id: str) -> StructuredUserInstructions | None:
+    """Return the τ³ instructions (with preflight requirements attached) for a PoC task_id,
+    or None if no fixture exists."""
+    builder = PREFLIGHT_FIXTURES.get(str(task_id))
     return builder() if builder else None

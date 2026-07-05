@@ -1,4 +1,4 @@
-"""StructuredUserInstructionsV2 — the Phase-1 pilot representation (handoff spec).
+"""Typed, task-local user requirements — a grader-visible representation.
 
 τ³ already gives each simulated user a semi-structured `StructuredUserInstructions`
 (see `tau2.data_model.tasks`). Its `task_instructions` field, however, is overloaded
@@ -8,19 +8,21 @@ has no predicate for most of those requirements, so a stated requirement like "d
 transfer me" is *revealed to the simulator but missed by the grader* (task 47's silent
 false-pass).
 
-V2 keeps the original simulator prose **byte-for-byte** and adds a typed, checkable
-`structured_requirements` representation for a *second* grader. Re-scoring the same
+This module holds the typed, checkable representation (`StructuredUserRequirements`) that a
+*second* grader reads. It is attached to τ³'s own `StructuredUserInstructions` via the
+optional `user_preflight_requirements` field, so the simulator prose (`task_instructions`)
+stays byte-for-byte unchanged and every existing task still loads. Re-scoring the same
 trajectory with both graders isolates one variable: what the grader can represent.
-
-The critical invariant:
-
-    v2.task_instructions == v1.task_instructions   # byte-for-byte
 
 Scope discipline (non-goals, per handoff): this is the *smallest action-relevant* model
 needed to grade requirements already recoverable from τ³'s own scenario prose. It is not a
 universal user model, not a logic engine, and not a `PreflightPolicyPack`. Every typed
 requirement carries provenance (`source_field` + `source_quote`) that must be a verbatim
 substring of the referenced source field — see `verify_provenance`.
+
+Import discipline: this module MUST NOT import from `tasks.py` (that would create a circular
+import — `tasks.py` imports `StructuredUserRequirements` from here). `verify_provenance`
+therefore duck-types the instructions object rather than importing its class.
 
 Dependency-light on purpose (pydantic only) so it imports and tests without the harness.
 """
@@ -72,6 +74,20 @@ class TaskConstraint(BaseModel):
     source_quote: str
 
 
+class SimulatorPolicy(BaseModel):
+    """Simulator-only behaviour, kept *separate* from user authorization.
+
+    These control how the simulated user speaks (incremental disclosure, persistence,
+    termination) — they are NOT things the grader treats as user consent. Optional and not
+    rendered into any prompt during the pilot (we never regenerate simulator prose from the
+    typed requirements).
+    """
+
+    reveal_incrementally: bool = False
+    persistence_limit: int | None = None
+    end_after_persistence_limit: bool = False
+
+
 class StructuredUserRequirements(BaseModel):
     """The typed, task-local requirements derived only from the existing τ³ scenario.
 
@@ -82,6 +98,8 @@ class StructuredUserRequirements(BaseModel):
                          reads (DENIED vs conditional vs granted).
     - `constraints`  — the gradeable units with provenance; each references an `action` that
                        the grader cross-checks against `authorizations`.
+    - `simulator_policy` — optional simulator-only controls, kept separate from the graded
+                         authorizations (never rendered into the simulator prose).
     """
 
     goal: str | None = None
@@ -90,77 +108,34 @@ class StructuredUserRequirements(BaseModel):
         default_factory=dict
     )
     constraints: list[TaskConstraint] = Field(default_factory=list)
-
-
-class SimulatorPolicy(BaseModel):
-    """Simulator-only behaviour, kept *separate* from user authorization.
-
-    These control how the simulated user speaks (incremental disclosure, persistence,
-    termination) — they are NOT things the grader treats as user consent. Optional and not
-    rendered into any prompt during the pilot (we never regenerate simulator prose from V2).
-    """
-
-    reveal_incrementally: bool = False
-    persistence_limit: int | None = None
-    end_after_persistence_limit: bool = False
-
-
-class StructuredUserInstructionsV2(BaseModel):
-    """τ³'s `StructuredUserInstructions` plus a typed representation of action-relevant
-    requirements. The original `task_instructions` string is preserved byte-for-byte for the
-    user simulator; `structured_requirements` is the new grader-visible representation."""
-
-    domain: str
-    reason_for_call: str
-    known_info: str | None = None
-    unknown_info: str | None = None
-
-    # Preserved exactly — this is what the user simulator reads. Never regenerate from V2.
-    task_instructions: str
-
-    # New typed representation used only by the structured-requirements grader.
-    structured_requirements: StructuredUserRequirements
-
-    # Optional typed simulator-only controls.
     simulator_policy: SimulatorPolicy | None = None
 
-    @classmethod
-    def from_v1(
-        cls,
-        v1,
-        structured_requirements: StructuredUserRequirements,
-        simulator_policy: SimulatorPolicy | None = None,
-    ) -> "StructuredUserInstructionsV2":
-        """Lift a τ³ `StructuredUserInstructions` (or any object exposing the same fields)
-        into V2, copying `task_instructions` verbatim so the byte-for-byte invariant holds by
-        construction."""
-        return cls(
-            domain=v1.domain,
-            reason_for_call=v1.reason_for_call,
-            known_info=v1.known_info,
-            unknown_info=v1.unknown_info,
-            task_instructions=v1.task_instructions,
-            structured_requirements=structured_requirements,
-            simulator_policy=simulator_policy,
-        )
 
-
-def verify_provenance(v2: StructuredUserInstructionsV2) -> list[str]:
+def verify_provenance(instructions) -> list[str]:
     """Deterministically verify every constraint's `source_quote` is a verbatim substring of
     the field it cites. Returns a list of human-readable problems (empty == all grounded).
+
+    `instructions` is a τ³ `StructuredUserInstructions` (duck-typed to avoid importing
+    `tasks.py`): it must expose the scenario source fields and a
+    `user_preflight_requirements` attribute. If no requirements are attached, there is
+    nothing to verify and the result is empty.
 
     This is the verification discipline from the handoff: reject any requirement whose quote
     cannot be recovered from the real task text.
     """
+    requirements = getattr(instructions, "user_preflight_requirements", None)
+    if requirements is None:
+        return []
+
     problems: list[str] = []
     field_values = {
-        "task_instructions": v2.task_instructions,
-        "reason_for_call": v2.reason_for_call,
-        "known_info": v2.known_info,
-        "unknown_info": v2.unknown_info,
-        "domain": v2.domain,
+        "task_instructions": instructions.task_instructions,
+        "reason_for_call": instructions.reason_for_call,
+        "known_info": instructions.known_info,
+        "unknown_info": instructions.unknown_info,
+        "domain": instructions.domain,
     }
-    for c in v2.structured_requirements.constraints:
+    for c in requirements.constraints:
         source = field_values.get(c.source_field)
         if source is None:
             problems.append(
