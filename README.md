@@ -26,9 +26,21 @@ We ran Claude Haiku on τ³ airline task 47 and found a grading failure:
 
 *("Sufficiently understand the user's state of mind" = the user's **epistemic state** — their model of reality. Where it diverges from the agent's, for a specific action, harm can follow.)*
 
-## Glossary
+## Innovation
 
-*Sequenced by dependency — each definition uses only the terms above it. The [Innovation](#innovation) section below assumes all of them.*
+Our eval innovation: we **instrument the unobservable** — the user's latent problem and the agent's current belief — as two comparable typed objects, and treat the **gap between them as the failure signal**. That gap flags exactly where **targeted expert data** most improves AI quality.
+
+**Why it matters for AI quality.**
+- **A more precise, deterministic grader** — the task-47 `PASS` above is a real bug it catches on a live τ³ airline task.
+- **Better-behaved agents** — when a required `ProblemSpecBelief` slot is `UNKNOWN`, the agent asks rather than acting on a guess. [ProblemSpec vs ProblemSpecBelief →](#problemspec-and-problemspecbelief)
+- **Human expertise becomes reusable data** — the shape of the `ProblemSpec` lets us collect expert judgment and encode it as **human-expert data** that both grades and gates agent behavior. [SME-authored policy →](#sme-authored-policy-what-ambiguity-to-resolve-before-acting)
+
+---
+
+<details>
+<summary><b>Glossary</b> — key terms, sequenced by dependency (click to expand)</summary>
+
+*Sequenced by dependency — each definition uses only the terms above it.*
 
 - **Common ground / common grounding** — the shared understanding two parties create, repair, and update in dialogue; an established term (Clark 1991; [Udagawa & Aizawa, AAAI 2019](https://arxiv.org/abs/1907.03399)). The concept behind the preflight check — the agent reaches *enough* shared understanding before acting (Clark's **grounding criterion**, *sufficient for current purposes*).
 - **Ontic predicate** — a fact about the world, resolvable by a **database query** (e.g., `refund_eligible` — check the fare rules). τ³ already grades these.
@@ -47,16 +59,7 @@ We ran Claude Haiku on τ³ airline task 47 and found a grading failure:
 
 Deeper theory and full prior art (POMDP belief states, assistance games, epistemic planning, Design by Contract): [`FRAMING.md`](FRAMING.md). Design notes — the four content types (requirement / preference / understanding / consent), informed consent as a bounded slice of causal-model alignment, and the harm-anchored SME elicitation pipeline: [`docs/design-notes-what-to-establish.md`](docs/design-notes-what-to-establish.md).
 
-## Innovation
-
-Our eval innovation: we **instrument the unobservable** — the user's latent problem and the agent's current belief — as two comparable typed objects, and treat the **gap between them as the failure signal**. That gap flags exactly where **targeted expert data** most improves AI quality.
-
-**Why it matters for AI quality.**
-- **A more precise, deterministic grader** — the task-47 `PASS` above is a real bug it catches on a live τ³ airline task.
-- **Better-behaved agents** — when a required `ProblemSpecBelief` slot is `UNKNOWN`, the agent asks rather than acting on a guess. [ProblemSpec vs ProblemSpecBelief →](#problemspec-and-problemspecbelief)
-- **Human expertise becomes reusable data** — the shape of the `ProblemSpec` lets us collect expert judgment and encode it as **human-expert data** that both grades and gates agent behavior. [SME-authored policy →](#sme-authored-policy-what-ambiguity-to-resolve-before-acting)
-
----
+</details>
 
 ## ProblemSpec and ProblemSpecBelief
 
