@@ -6,7 +6,7 @@
 > we add one optional [`user_preflight_requirements`](README.md) field (a typed
 > `UserPreflightRequirements`) to τ³'s own `StructuredUserInstructions`, leaving the original
 > `task_instructions` prose byte-for-byte unchanged, and a
-> `StructuredRequirementsEvaluator` re-scores the *same recorded trajectory* the τ³ grader already
+> `PreflightRequirementsEvaluator` re-scores the *same recorded trajectory* the τ³ grader already
 > scored — needing only the **grader's** view, not the agent's belief. The belief tracker below
 > (and its `ProblemSpecBelief` schema) is a valuable follow-on, but nothing in the pilot depends
 > on it. Read it as the deferred phase, not as shipped machinery.

@@ -36,7 +36,7 @@ Existing agent benchmarks evaluate on terminal success — did an API tool fire 
 
 ## 5. Method
 - Run agents on τ³ tasks; observe belief; **deterministic verification** of every finding (quote/action grounding + independent grade recompute).
-- `StructuredRequirementsEvaluator`: encode the requirement as a typed constraint, recompute DB ∧ CONSTRAINT → flips PASS→FAIL (paired re-scoring of the same recorded trajectory).
+- `PreflightRequirementsEvaluator`: encode the requirement as a typed constraint, recompute DB ∧ CONSTRAINT → flips PASS→FAIL (paired re-scoring of the same recorded trajectory).
 - Phase-1 automated flagging (LLM-judge over latent constraints); Phase-2 expert enumeration.
 
 ## 6. Pilot results
@@ -48,7 +48,7 @@ Existing agent benchmarks evaluate on terminal success — did an API tool fire 
 - Scope discipline: only resolvable, gradeable, action-relevant preconditions (not full user modeling).
 
 ## 8. Limitations
-- Pilot scale; single-control (airline) domain; `StructuredRequirementsEvaluator` runs on recorded trajectories (paired re-scoring); live integration is future work.
+- Pilot scale; single-control (airline) domain; `PreflightRequirementsEvaluator` runs on recorded trajectories (paired re-scoring); live integration is future work.
 
 ## 9. Conclusion
 - Grade the *model of the problem*, not just the final move; the preflight check is the minimal instrument, and the two patterns make it a program, not a one-off.

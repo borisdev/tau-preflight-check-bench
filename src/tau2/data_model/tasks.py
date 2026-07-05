@@ -10,7 +10,7 @@ from pydantic import BaseModel, Field
 from typing_extensions import Annotated
 
 from tau2.data_model.message import Message, ToolCall, ToolRequestor
-from tau2.data_model.structured_requirements import UserPreflightRequirements
+from tau2.data_model.preflight_requirements import UserPreflightRequirements
 
 
 class StructuredUserInstructions(BaseModel):
@@ -33,13 +33,13 @@ class StructuredUserInstructions(BaseModel):
     task_instructions: Annotated[str, Field(description="Instructions for the User.")]
 
     # LOCAL ADDITION (not in upstream τ³): optional typed requirements read by the
-    # StructuredRequirementsEvaluator. Default None keeps every existing task loadable and is
+    # PreflightRequirementsEvaluator. Default None keeps every existing task loadable and is
     # deliberately excluded from __str__ so the simulator prose stays byte-for-byte unchanged.
-    # See structured_requirements.py and VENDOR.md.
+    # See preflight_requirements.py and VENDOR.md.
     user_preflight_requirements: Annotated[
         Optional[UserPreflightRequirements],
         Field(
-            description="Typed, task-local requirements for the structured-requirements grader. "
+            description="Typed, task-local requirements for the preflight-requirements grader. "
             "Not rendered into the simulator prose.",
             default=None,
         ),

@@ -1,4 +1,4 @@
-"""StructuredRequirementsEvaluator — the deterministic V2 grader.
+"""PreflightRequirementsEvaluator — the deterministic V2 grader.
 
 Given a recorded trajectory (the poc/trajectories.json shape: a list of role/text/tool_calls
 dicts) and a `UserPreflightRequirements`, it reports human-readable violations of the
@@ -23,7 +23,7 @@ from __future__ import annotations
 
 from pydantic import BaseModel
 
-from tau2.data_model.structured_requirements import (
+from tau2.data_model.preflight_requirements import (
     ConditionalAuthorization,
     ConsentStatus,
     UserPreflightRequirements,
@@ -134,7 +134,7 @@ def _check_constraint(
     return violations
 
 
-class StructuredRequirementsEvaluator:
+class PreflightRequirementsEvaluator:
     """reward = 0 if ANY task-local requirement is violated, else 1 (mirrors τ³'s
     multiplicative pass/fail component style)."""
 

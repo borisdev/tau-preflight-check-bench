@@ -15,6 +15,6 @@ All `src/` code is intact (incl. voice modules, unused here). To pull upstream
 fixes: `git fetch upstream && git checkout upstream/main -- <path>`.
 
 ## Local additions vs. upstream (pull carefully)
-- `src/tau2/data_model/tasks.py` — `StructuredUserInstructions` carries one local field, the optional `user_preflight_requirements` (from `structured_requirements.py`); re-do upstream pulls of this file carefully so the field is preserved.
+- `src/tau2/data_model/tasks.py` — `StructuredUserInstructions` carries one local field, the optional `user_preflight_requirements` (from `preflight_requirements.py`); re-do upstream pulls of this file carefully so the field is preserved.
 
 See `PROBLEM_BELIEF_SPEC.md` for the deferred agent-belief-tracking design (the current pilot is paired re-scoring — see `README.md` and `docs/claude-code-handoff-structured-user-instructions-v2.md`).

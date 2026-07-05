@@ -2,7 +2,7 @@
 
 For each saved trajectory that has a V2 fixture, this re-scores it with:
   1. the existing τ³ DB/COMMUNICATE grade (read from the recorded run — unchanged);
-  2. the new deterministic StructuredRequirementsEvaluator (V2 typed requirements).
+  2. the new deterministic PreflightRequirementsEvaluator (V2 typed requirements).
 
 Only the grader's representation changes; the task, simulator prose, trajectory, tool calls,
 DB state, and agent output are all held fixed. Any verdict difference is therefore attributable
@@ -23,8 +23,8 @@ from typing import Literal
 from pydantic import BaseModel
 
 from tau2.data_model.fixtures_preflight import get_preflight_fixture
-from tau2.evaluator.structured_requirements_evaluator import (
-    StructuredRequirementsEvaluator,
+from tau2.evaluator.preflight_requirements_evaluator import (
+    PreflightRequirementsEvaluator,
     StructuredRequirementViolation,
 )
 
@@ -76,7 +76,7 @@ def _flip(tau3_pass: bool, structured_pass: bool) -> Literal["none", "pass_to_fa
 def run() -> tuple[list[PairedGradeResult], list[str]]:
     trajectories = json.load(open(TRAJECTORIES))
     verified = {f["task_id"]: f for f in json.load(open(VERIFIED_FINDINGS))}
-    evaluator = StructuredRequirementsEvaluator()
+    evaluator = PreflightRequirementsEvaluator()
 
     results: list[PairedGradeResult] = []
     skipped: list[str] = []
@@ -118,7 +118,7 @@ def to_markdown(results: list[PairedGradeResult], skipped: list[str]) -> str:
         flips[r.verdict_flip] += 1
 
     lines = [
-        "# Paired re-scoring: τ³ grader vs structured-requirements grader",
+        "# Paired re-scoring: τ³ grader vs preflight-requirements grader",
         "",
         "Same task, same simulator prose, same trajectory, same agent output — only the "
         "grader's representation of user requirements changes.",

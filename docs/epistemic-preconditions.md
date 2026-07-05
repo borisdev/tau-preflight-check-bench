@@ -10,7 +10,7 @@ A precondition is **ontic** if it's a fact about the world (a state-grader can c
 
 **Ontic contrast anchor.** `issue_refund ← refund_eligible == True`, and `cancel_reservation` also carries `within_24h ∨ airline_cancelled ∨ insured`. Those are DB-checkable facts — **τ³ already grades them.** The epistemic guards in the README's table are the layer it can't see.
 
-The airline pilot falls out of this split: the three FAILs τ³ already catches (24 / 35 / 43) are ontic (a wrongful cancellation *changes* the DB); the one detection the structured-requirements grade *adds* (task 47) is epistemic (the transfer leaves the DB unchanged).
+The airline pilot falls out of this split: the three FAILs τ³ already catches (24 / 35 / 43) are ontic (a wrongful cancellation *changes* the DB); the one detection the preflight-requirements grade *adds* (task 47) is epistemic (the transfer leaves the DB unchanged).
 
 ## One artifact, two uses
 

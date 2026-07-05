@@ -4,7 +4,7 @@ Moved out of the README to keep the main page approachable.
 
 ## The one added detection — task 47
 
-Task 47 is graded on `reward_basis = [DB, COMMUNICATE]` with `communicate_info = []` — so the score is just *did the DB change?* No DB change → the transfer is invisible → **PASS**. (The task's lone `nl_assertion` is diagnostic-only — it checks cancellation, not transfers.) Lifting the *don't transfer* requirement into a typed `UserPreflightRequirements` constraint and grading it with `StructuredRequirementsEvaluator` flips the verdict:
+Task 47 is graded on `reward_basis = [DB, COMMUNICATE]` with `communicate_info = []` — so the score is just *did the DB change?* No DB change → the transfer is invisible → **PASS**. (The task's lone `nl_assertion` is diagnostic-only — it checks cancellation, not transfers.) Lifting the *don't transfer* requirement into a typed `UserPreflightRequirements` constraint and grading it with `PreflightRequirementsEvaluator` flips the verdict:
 
 ```
 DB grade (τ³ today) ................ PASS   (reward=1; DB unchanged)

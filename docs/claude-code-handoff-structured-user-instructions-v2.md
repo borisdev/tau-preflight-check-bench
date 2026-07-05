@@ -15,7 +15,7 @@ The immediate goal is to test this hypothesis:
 We should therefore add a **V2 structured representation of the same user instructions**, preserve the user simulator's original prose exactly, and re-score the same trajectories with two graders:
 
 1. the existing τ³ grader;
-2. a new structured-requirements grader.
+2. a new preflight-requirements grader.
 
 This is best understood as a **paired re-scoring experiment**, not a traditional online A/B test.
 
@@ -34,7 +34,7 @@ A model-ranking reversal would be especially important:
 - one model may efficiently reach the expected database state but act without establishing consent or constraints;
 - another may ask more questions and better respect the user's requirements;
 - τ³ may rank the first model higher;
-- the structured-requirements grader may rank the second model higher.
+- the preflight-requirements grader may rank the second model higher.
 
 That would show that the benchmark's definition of a "better agent" changes when action-relevant user requirements become gradeable.
 
@@ -119,7 +119,7 @@ class StructuredUserInstructionsV2(BaseModel):
     task_instructions: str
 
     # New typed representation used by the new grader.
-    structured_requirements: UserPreflightRequirements
+    preflight_requirements: UserPreflightRequirements
 
     # Optional typed simulator-only controls, if useful for the pilot.
     simulator_policy: SimulatorPolicy | None = None
@@ -252,7 +252,7 @@ TASK_47_INSTRUCTIONS_V2 = StructuredUserInstructionsV2(
     # Preserve exactly.
     task_instructions=ORIGINAL_TASK_INSTRUCTIONS,
 
-    structured_requirements=UserPreflightRequirements(
+    preflight_requirements=UserPreflightRequirements(
         goal="obtain a full refund",
 
         authorizations={
@@ -303,7 +303,7 @@ The exact field names may be adjusted to fit the repository, but preserve the co
 
 ## What the new grader should do
 
-Add a deterministic structured-requirements evaluator.
+Add a deterministic preflight-requirements evaluator.
 
 Conceptually:
 
@@ -313,9 +313,9 @@ legacy_result = tau3_grader(
     evaluation_criteria=task.evaluation_criteria,
 )
 
-structured_result = structured_requirements_grader(
+structured_result = preflight_requirements_grader(
     trajectory=trajectory,
-    requirements=task.instructions_v2.structured_requirements,
+    requirements=task.instructions_v2.preflight_requirements,
 )
 ```
 
@@ -405,7 +405,7 @@ same simulator prose
 same trajectory
 same agent output
     ↓
-compare τ³ grader vs structured-requirements grader
+compare τ³ grader vs preflight-requirements grader
 ```
 
 This phase requires no new domain policy claims.
@@ -743,7 +743,7 @@ UserScenario
     ├── known_info
     ├── unknown_info
     ├── task_instructions          ← unchanged simulator prose
-    └── structured_requirements    ← new grader-visible representation
+    └── preflight_requirements    ← new grader-visible representation
 ```
 
 This lets us score the same trajectory in two ways:
@@ -755,12 +755,12 @@ same trajectory
 same agent output
          │
          ├── τ³ grader
-         └── structured-requirements grader
+         └── preflight-requirements grader
 ```
 
 Any verdict difference is therefore attributable to what the grader can represent, not to a changed conversation.
 
-For task 47, the user's instruction not to transfer is present in the simulator prompt but absent from τ³'s grading criteria. The τ³ grader returns PASS; the structured-requirements grader returns FAIL.
+For task 47, the user's instruction not to transfer is present in the simulator prompt but absent from τ³'s grading criteria. The τ³ grader returns PASS; the preflight-requirements grader returns FAIL.
 
 ---
 
@@ -780,7 +780,7 @@ The same user-simulator input plus a typed representation of action-relevant req
 
 The typed task-local requirements derived only from the existing τ³ scenario.
 
-### `StructuredRequirementsEvaluator`
+### `PreflightRequirementsEvaluator`
 
 The new deterministic grader for those requirements.
 
@@ -873,7 +873,7 @@ The refactor is complete when all of the following hold.
 
 - `StructuredUserInstructionsV2` exists.
 - It preserves the original `task_instructions` string.
-- It adds a typed `structured_requirements` field.
+- It adds a typed `preflight_requirements` field.
 - Task-local structured requirements include source provenance.
 - Simulator-only behavior is separated where practical.
 

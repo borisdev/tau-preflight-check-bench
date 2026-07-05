@@ -65,7 +65,7 @@ Deeper theory and full prior art (POMDP belief states, assistance games, epistem
 
 ## The patch: make the implicit requirement explicit
 
-Our eval innovation: we **instrument the unobservable** — the user's latent problem and the agent's current belief — as two comparable typed objects, and treat the **gap between them as the failure signal**. That gap flags exactly where **targeted expert data** most improves AI quality.
+We make the unobservable **checkable**: the user's latent requirements become a typed object the grader scores the agent's actions against (the agent's *belief* over them is the deferred belief-tracking layer — today only the target ships). Where the agent's actions and that target diverge is the failure signal, and it flags where **targeted expert data** most improves AI quality.
 
 ### Existing in τ³ — implicit, in prose
 
@@ -95,7 +95,7 @@ We add one optional field to τ³'s own `StructuredUserInstructions` (no wrapper
 +     user_preflight_requirements: UserPreflightRequirements | None = None   # NEW — typed, grader-visible
 ```
 
-The field is optional (`default None`), so existing tasks are unaffected and the prose is unchanged. Two supporting files: [`structured_requirements.py`](https://github.com/borisdev/tau-preflight-check-bench/blob/main/src/tau2/data_model/structured_requirements.py) (the types) and [`StructuredRequirementsEvaluator`](https://github.com/borisdev/tau-preflight-check-bench/blob/main/src/tau2/evaluator/structured_requirements_evaluator.py) (reads the field). Populate it for task 47 — the same requirement, typed, with provenance (each rule cites its `source_quote`, the red line above):
+The field is optional (`default None`), so existing tasks are unaffected and the prose is unchanged. Two supporting files: [`preflight_requirements.py`](https://github.com/borisdev/tau-preflight-check-bench/blob/main/src/tau2/data_model/preflight_requirements.py) (the types) and [`PreflightRequirementsEvaluator`](https://github.com/borisdev/tau-preflight-check-bench/blob/main/src/tau2/evaluator/preflight_requirements_evaluator.py) (reads the field). Populate it for task 47 — the same requirement, typed, with provenance (each rule cites its `source_quote`, the red line above):
 
 ```diff
 + UserPreflightRequirements(
@@ -115,7 +115,7 @@ The field is optional (`default None`), so existing tasks are unaffected and the
 +   ])
 ```
 
-The `StructuredRequirementsEvaluator` flips task 47 `PASS → FAIL` — a controlled result (FAQ: *did you invent a rule?* · *a different conversation?*). Mechanics + verification: [`docs/pilot-details.md`](docs/pilot-details.md).
+The `PreflightRequirementsEvaluator` flips task 47 `PASS → FAIL` — a controlled result (FAQ: *did you invent a rule?* · *a different conversation?*). Mechanics + verification: [`docs/pilot-details.md`](docs/pilot-details.md).
 
 Epistemic precondition in depth (ontic vs epistemic, SME hydration, the PDDL / Pydantic action frame): [`docs/epistemic-preconditions.md`](docs/epistemic-preconditions.md).
 
@@ -125,9 +125,9 @@ Epistemic precondition in depth (ontic vs epistemic, SME hydration, the PDDL / P
 | Stage | File | What it does |
 |---|---|---|
 | Run | [`poc/run_airline.py`](poc/run_airline.py) | Haiku agent vs. Sonnet user-sim on the real τ³ airline tools + policy; records the trajectory and recomputes the DB grade. |
-| Extract | [`poc/analyze_beliefs.py`](poc/analyze_beliefs.py) | Sonnet observer emits a per-task belief summary + cited evidence (first-pass, unverified). |
+| Extract | [`poc/analyze_beliefs.py`](poc/analyze_beliefs.py) | Sonnet observer proposes candidate violated-requirement findings + cited evidence (first-pass, unverified — an extraction heuristic, *not* the deferred belief-state layer). |
 | Verify | [`poc/verify_findings.py`](poc/verify_findings.py) | Deterministic quote/action grounding + independent grade recompute; rejects ungrounded findings. |
-| Structured-requirements grade | `StructuredRequirementsEvaluator` — [`src/…/structured_requirements_evaluator.py`](https://github.com/borisdev/tau-preflight-check-bench/blob/main/src/tau2/evaluator/structured_requirements_evaluator.py) | Grades a trajectory against the task's `UserPreflightRequirements` (typed constraints with source-quote provenance). |
+| Preflight-requirements grade | `PreflightRequirementsEvaluator` — [`src/…/preflight_requirements_evaluator.py`](https://github.com/borisdev/tau-preflight-check-bench/blob/main/src/tau2/evaluator/preflight_requirements_evaluator.py) | Grades a trajectory against the task's `UserPreflightRequirements` (typed constraints with source-quote provenance). |
 
 Data artifacts: [`poc/trajectories.json`](poc/trajectories.json), [`poc/verified_findings.json`](poc/verified_findings.json), readable transcripts in [`poc/traces/`](poc/traces/).
 
@@ -193,7 +193,7 @@ No — it's **controlled**. We re-score the *same recorded trajectory*; task, si
 ```text
 same task · same simulator prose · same trajectory · same agent output
         ├── τ³ grader (DB / outcome) .......... PASS
-        └── structured-requirements grader .... FAIL   (transfer fired; authorization = DENIED; turn 12)
+        └── preflight-requirements grader .... FAIL   (transfer fired; authorization = DENIED; turn 12)
 ```
 
 Full mechanics + independent verification: [`docs/pilot-details.md`](docs/pilot-details.md).
@@ -202,7 +202,7 @@ Full mechanics + independent verification: [`docs/pilot-details.md`](docs/pilot-
 <details>
 <summary><b>What's the implementation status?</b></summary>
 
-One optional field, `user_preflight_requirements: UserPreflightRequirements | None = None`, added directly to τ³'s `StructuredUserInstructions` (no wrapper). Types in [`structured_requirements.py`](https://github.com/borisdev/tau-preflight-check-bench/blob/main/src/tau2/data_model/structured_requirements.py); graded by `StructuredRequirementsEvaluator`; the first slice flips task 47 `PASS → FAIL`; merged to `main`. Optional/default-`None` → existing tasks load unchanged and the prose is byte-for-byte; the field is not shown to the agent (no leakage). Remaining work — wire into the live simulator and register as a `reward_basis` component — is [issue #1](https://github.com/borisdev/tau-preflight-check-bench/issues/1).
+One optional field, `user_preflight_requirements: UserPreflightRequirements | None = None`, added directly to τ³'s `StructuredUserInstructions` (no wrapper). Types in [`preflight_requirements.py`](https://github.com/borisdev/tau-preflight-check-bench/blob/main/src/tau2/data_model/preflight_requirements.py); graded by `PreflightRequirementsEvaluator`; the first slice flips task 47 `PASS → FAIL`; merged to `main`. Optional/default-`None` → existing tasks load unchanged and the prose is byte-for-byte; the field is not shown to the agent (no leakage). Remaining work — wire into the live simulator and register as a `reward_basis` component — is [issue #1](https://github.com/borisdev/tau-preflight-check-bench/issues/1).
 </details>
 
 <details>
@@ -216,7 +216,7 @@ One optional field, `user_preflight_requirements: UserPreflightRequirements | No
 
 - Six tasks, one agent model, airline (single-control) only — a pilot, not a measured rate.
 - Agent-side belief tracking (a per-turn belief-vs-requirements convergence curve) is a deferred later phase; the paired re-scoring experiment doesn't depend on it.
-- The `StructuredRequirementsEvaluator` runs against recorded trajectories (paired re-scoring); wiring it into the live user-simulator and registering it as a `reward_basis` component is the remaining work ([issue #1](https://github.com/borisdev/tau-preflight-check-bench/issues/1)).
+- The `PreflightRequirementsEvaluator` runs against recorded trajectories (paired re-scoring); wiring it into the live user-simulator and registering it as a `reward_basis` component is the remaining work ([issue #1](https://github.com/borisdev/tau-preflight-check-bench/issues/1)).
 - DB grades are recomputed against τ³'s real `reward_basis`; the task-47 pass is verified against that spec.
 </details>
 

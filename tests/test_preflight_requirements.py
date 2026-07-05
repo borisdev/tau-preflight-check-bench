@@ -1,6 +1,6 @@
-"""Tests for the preflight structured-requirements pilot (handoff Phase 1).
+"""Tests for the preflight preflight-requirements pilot (handoff Phase 1).
 
-The typed requirements now live in `tau2.data_model.structured_requirements` and are attached
+The typed requirements now live in `tau2.data_model.preflight_requirements` and are attached
 to τ³'s own `StructuredUserInstructions` via the optional `user_preflight_requirements` field
 (there is no separate V2 wrapper anymore).
 
@@ -19,7 +19,7 @@ from __future__ import annotations
 import json
 
 from tau2.data_model.fixtures_preflight import build_task_47, get_preflight_fixture
-from tau2.data_model.structured_requirements import (
+from tau2.data_model.preflight_requirements import (
     ConditionalAuthorization,
     ConsentStatus,
     UserPreflightRequirements,
@@ -27,8 +27,8 @@ from tau2.data_model.structured_requirements import (
     verify_provenance,
 )
 from tau2.data_model.tasks import StructuredUserInstructions
-from tau2.evaluator.structured_requirements_evaluator import (
-    StructuredRequirementsEvaluator,
+from tau2.evaluator.preflight_requirements_evaluator import (
+    PreflightRequirementsEvaluator,
 )
 from tau2.utils import DATA_DIR
 
@@ -132,7 +132,7 @@ def test_structured_grader_flips_task_47_to_fail_on_transfer():
     # τ³ recorded this as PASS.
     assert float(traj["reward"]) >= 1.0
 
-    result = StructuredRequirementsEvaluator().evaluate_instructions(
+    result = PreflightRequirementsEvaluator().evaluate_instructions(
         traj["trajectory"], instructions
     )
     assert result is not None
@@ -158,7 +158,7 @@ def test_conditional_cancel_does_not_misfire_when_cancel_absent():
         (DATA_DIR.parent / "poc" / "trajectories.json").read_text()
     )
     traj = next(t for t in trajectories if str(t["task_id"]) == "47")
-    result = StructuredRequirementsEvaluator().evaluate_instructions(
+    result = PreflightRequirementsEvaluator().evaluate_instructions(
         traj["trajectory"], instructions
     )
     cancel_violations = [
@@ -175,7 +175,7 @@ def test_clean_trajectory_produces_no_violations():
             {"name": "get_reservation_details", "args": {"reservation_id": "H8Q05L"}}
         ]},
     ]
-    result = StructuredRequirementsEvaluator().evaluate_instructions(
+    result = PreflightRequirementsEvaluator().evaluate_instructions(
         clean, instructions
     )
     assert result.passed is True
@@ -192,7 +192,7 @@ def test_get_preflight_fixture_known_and_unknown():
 
 def test_evaluate_instructions_skips_when_no_requirements():
     v1 = _original_task_47_instructions()
-    result = StructuredRequirementsEvaluator().evaluate_instructions([], v1)
+    result = PreflightRequirementsEvaluator().evaluate_instructions([], v1)
     assert result is None
 
 
@@ -214,6 +214,6 @@ def test_denied_authorization_grades_generic_requirements():
             {"name": "charge_payment", "args": {"amount": 100}}
         ]},
     ]
-    result = StructuredRequirementsEvaluator().evaluate(traj, reqs)
+    result = PreflightRequirementsEvaluator().evaluate(traj, reqs)
     assert result.passed is False
     assert result.violations[0].turn == 0

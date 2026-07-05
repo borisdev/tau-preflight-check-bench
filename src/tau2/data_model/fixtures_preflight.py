@@ -16,7 +16,7 @@ from __future__ import annotations
 import json
 from functools import lru_cache
 
-from tau2.data_model.structured_requirements import (
+from tau2.data_model.preflight_requirements import (
     ConditionalAuthorization,
     ConsentStatus,
     SimulatorPolicy,

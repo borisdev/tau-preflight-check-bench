@@ -1,4 +1,4 @@
-# Paired re-scoring: τ³ grader vs structured-requirements grader
+# Paired re-scoring: τ³ grader vs preflight-requirements grader
 
 Same task, same simulator prose, same trajectory, same agent output — only the grader's representation of user requirements changes.
 
