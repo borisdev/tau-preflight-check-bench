@@ -2,6 +2,8 @@
 
 *Before an AI agent fires a consequential action, does it run a preflight check that probes the user's unobserved understanding and preferences — so it doesn't hurt or hassle the user?*
 
+τ-PreflightCheck makes that question **gradeable**: beyond τ³'s terminal database state, it scores whether the agent established the user's action-relevant requirements before firing the action.
+
 ## Motivation
 
 We ran Claude Haiku on τ³ airline task 47 and found a grading failure:
@@ -23,10 +25,6 @@ We ran Claude Haiku on τ³ airline task 47 and found a grading failure:
 → Full illustrative checklist (~25 airline actions, with the anti-circularity caveat): [`docs/preflight-checklist-example.md`](docs/preflight-checklist-example.md)
 
 *("Sufficiently understand the user's state of mind" = the user's **epistemic state** — their model of reality. Where it diverges from the agent's, for a specific action, harm can follow.)*
-
-## What this benchmark does
-
-τ-PreflightCheck makes that question **gradeable**: beyond τ³'s terminal database state, it scores whether the agent established the user's action-relevant requirements *before* firing — flipping silent false-passes like task 47 into **FAIL**s.
 
 ## Roadmap
 
