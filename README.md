@@ -166,7 +166,7 @@ The **DB grade** is τ³'s authoritative verdict — we recompute it by replayin
 | Run | [`poc/run_airline.py`](poc/run_airline.py) | Haiku agent vs. Sonnet user-sim on the real τ³ airline tools + policy; records the trajectory and recomputes the DB grade. |
 | Extract | [`poc/analyze_beliefs.py`](poc/analyze_beliefs.py) | Sonnet observer emits a per-task belief summary + cited evidence (first-pass, unverified). |
 | Verify | [`poc/verify_findings.py`](poc/verify_findings.py) | Deterministic quote/action grounding + independent grade recompute; rejects ungrounded findings. |
-| Structured-requirements grade | `StructuredRequirementsEvaluator` — [branch `feat/structured-problemspec`](https://github.com/borisdev/tau-preflight-check/tree/feat/structured-problemspec) | Grades a trajectory against the task's `StructuredUserRequirements` (typed constraints with source-quote provenance). |
+| Structured-requirements grade | `StructuredRequirementsEvaluator` — [`src/…/structured_requirements_evaluator.py`](https://github.com/borisdev/tau-preflight-check/blob/main/src/tau2/evaluator/structured_requirements_evaluator.py) | Grades a trajectory against the task's `StructuredUserRequirements` (typed constraints with source-quote provenance). |
 
 Data artifacts: [`poc/trajectories.json`](poc/trajectories.json), [`poc/verified_findings.json`](poc/verified_findings.json), readable transcripts in [`poc/traces/`](poc/traces/).
 
@@ -176,7 +176,7 @@ Reproduce: `run_airline.py` → `analyze_beliefs.py` → `verify_findings.py`.
 
 ## Implementation status (issue #1)
 
-The `StructuredUserInstructionsV2` / `StructuredUserRequirements` types and a `StructuredRequirementsEvaluator` — the first slice that flips task 47 `PASS → FAIL` — are on branch [`feat/structured-problemspec`](https://github.com/borisdev/tau-preflight-check/tree/feat/structured-problemspec); the related belief-layer design (a deferred later phase) is in [`PROBLEM_BELIEF_SPEC.md`](PROBLEM_BELIEF_SPEC.md). `StructuredUserInstructionsV2` preserves the original `task_instructions` prose byte-for-byte and adds the typed `structured_requirements` the grader checks — but that typed field is **not** given to the agent, so the paired re-scoring measurement is not leaked. Tracked in [issue #1](https://github.com/borisdev/tau-preflight-check/issues/1).
+The `StructuredUserInstructionsV2` / `StructuredUserRequirements` types and a `StructuredRequirementsEvaluator` — the first slice that flips task 47 `PASS → FAIL` — are merged into `main`; the related belief-layer design (a deferred later phase) is in [`PROBLEM_BELIEF_SPEC.md`](PROBLEM_BELIEF_SPEC.md). `StructuredUserInstructionsV2` preserves the original `task_instructions` prose byte-for-byte and adds the typed `structured_requirements` the grader checks — but that typed field is **not** given to the agent, so the paired re-scoring measurement is not leaked. Tracked in [issue #1](https://github.com/borisdev/tau-preflight-check/issues/1).
 
 ## What about τ²-Bench / dual control?
 
@@ -189,7 +189,7 @@ The `StructuredUserInstructionsV2` / `StructuredUserRequirements` types and a `S
 - **Worked example:** [`poc/CASE_STUDY.md`](poc/CASE_STUDY.md) — task 47 with verbatim runtime objects and a turn-by-turn belief table.
 - **Per-task detail:** [`poc/FINDINGS.md`](poc/FINDINGS.md) — the table above with evidence and the verifier output.
 - **Code / data:** [`poc/`](poc/) scripts and JSON artifacts; readable transcripts in [`poc/traces/`](poc/traces/).
-- **Refactor:** [issue #1](https://github.com/borisdev/tau-preflight-check/issues/1) · branch [`feat/structured-problemspec`](https://github.com/borisdev/tau-preflight-check/tree/feat/structured-problemspec).
+- **Refactor:** [issue #1](https://github.com/borisdev/tau-preflight-check/issues/1) · merged to `main` (V2 refactor).
 - **Provenance:** [`VENDOR.md`](VENDOR.md) · [`LICENSE`](LICENSE) (MIT, Sierra Research) · [`README_upstream_tau3.md`](README_upstream_tau3.md).
 
 ## Limitations

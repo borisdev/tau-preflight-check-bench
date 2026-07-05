@@ -615,7 +615,7 @@ Do not make that claim until supported by multi-model evidence.
 
 Inspect:
 
-- `feat/structured-problemspec`;
+- `feat/structured-user-instructions-v2`;
 - `src/tau2/data_model/problem_spec.py`;
 - the existing `ConstraintEvaluator`;
 - task-47 fixtures;
