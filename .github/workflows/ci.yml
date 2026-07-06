@@ -1,0 +1,22 @@
+name: CI
+
+# Deterministic Phase-1 tests only — no API-dependent trajectory generation runs in CI.
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install (base + dev)
+        run: uv sync --extra dev
+
+      - name: Phase-1 unit tests
+        run: uv run pytest tests/test_preflight_requirements.py -q

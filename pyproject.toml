@@ -10,6 +10,11 @@ readme = "README.md"
 requires-python = ">=3.12,<3.14"
 license = "MIT"
 authors = [
+    { name = "Victor Barres", email = "victor.barres@gmail.com" },
+    { name = "Honghua Dong", email = "dhh19951@gmail.com" },
+    { name = "Boris Dev", email = "boris.dev@gmail.com" }
+]
+maintainers = [
     { name = "Boris Dev", email = "boris.dev@gmail.com" }
 ]
 dependencies = [

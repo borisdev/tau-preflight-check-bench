@@ -1,6 +1,6 @@
 """Paired re-scoring: grade the SAME recorded trajectories with BOTH graders.
 
-For each saved trajectory that has a V2 fixture, this re-scores it with:
+For each saved trajectory that has a preflight fixture, this re-scores it with:
   1. the existing τ³ DB/COMMUNICATE grade (read from the recorded run — unchanged);
   2. the new deterministic PreflightRequirementsEvaluator (V2 typed requirements).
 
@@ -128,7 +128,7 @@ def to_markdown(results: list[PairedGradeResult], skipped: list[str]) -> str:
         f"- PASS -> FAIL (τ³ false-pass exposed): **{flips['pass_to_fail']}**",
         f"- FAIL -> PASS (investigate): **{flips['fail_to_pass']}**",
         f"- unchanged: **{flips['none']}**",
-        f"- skipped (no V2 fixture yet): {', '.join(skipped) if skipped else 'none'}",
+        f"- skipped (no preflight fixture): {', '.join(skipped) if skipped else 'none'}",
         "",
         "## Per-task",
         "",
