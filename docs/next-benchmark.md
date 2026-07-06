@@ -51,3 +51,23 @@ Author **3 seed tasks** — one *clear-comply*, one *clear-protect*, one *genuin
 - Renamed `tau-bench-audit`; `main` has the pipeline + two-pattern framing + CI.
 - **PR #6** open (audit repositioning) — decide merge tomorrow; it's still accurate for *what exists*, and doesn't conflict with this direction.
 - Multi-seed run (K=5) blocked only on **Anthropic API credits** (~$50 top-up; caching already added).
+
+---
+
+## Key design decision — update the policy to *mandate* the preflight check (captured 2026-07-06, late)
+
+To make the grading **fair**, the agent must be **told** to preflight-check; otherwise we grade it against a standard it never received (the "never told" objection — currently handled as an honest *proxy*, with a caveat). Fix = extend the policy.
+
+- **Today:** `policy.md` line 7 mandates *"confirm before a booking-database update"* — a preflight check for the DB-affecting subset only.
+- **Extend to:** *"Before a consequential or irreversible action (transfer, cancel, charge), confirm with the user and surface relevant constraints; when the user's intent is ambiguous, ask before acting."*
+- **Result:** the agent **is** told → grade compliance → and τ-bench's outcome-grader **still** can't see it (process step, no DB change) → blind spot holds → **airtight** (caveat gone).
+
+**Two things to keep clear-eyed:**
+1. **What "latent" means shifts (for the better).** The *duty to check* becomes explicit (policy); what stays latent is the user's **answer**, surfaced **by** the preflight (asking). So we grade "did it run the check," not "did it read the user's mind."
+2. **Don't make it trivial.** A blanket "always confirm" → over-confirmation / paternalism / no model separation. Encode the **calibrated** rule — confirm/probe scaled to **severity × ambiguity**. The policy *is* the severity×ambiguity surface. This is the bridge to the calibration bench.
+
+**Maps to the two patterns:**
+- Policy mandates the preflight → **Pattern A** (stated invariant, gradeable, τ-bench-blind, airtight).
+- Policy still silent on a specific latent pref → **Pattern B** (flag → SME → new policy invariant). The flywheel.
+
+**Next step:** draft the calibrated preflight clause for `policy.md` (a fork-local addition, noted in VENDOR), then re-run the pilot against the updated policy to show the agent was told, skipped it, and τ-bench still passed.
