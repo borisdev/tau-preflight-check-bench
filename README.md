@@ -69,10 +69,6 @@ To make the check *fair to grade*, the agent must be **told** to run it. So we e
 + reversible actions, proceed without needless confirmation.
 ```
 
-With this clause the preflight check is a **stated policy requirement**: an agent that fires a consequential action without one is violating the policy — yet τ³'s DB-grade still can't see it (the action changes no row). This is our fork-local addition to τ³'s [`airline/policy.md`](data/tau2/domains/airline/policy.md).
-
-*(The pilot trajectories in this repo were recorded against the original policy. Re-recording against this extended policy — to show the agent **was told**, skipped it, and τ³ **still passed** — is the next run, pending API credits.)*
-
 ## The patch: make the implicit requirement explicit
 
 We make the unobservable **checkable**: the user's latent requirements become a typed object the grader scores the agent's actions against (the agent's *belief* over them is the deferred belief-tracking layer — today only the target ships). Where the agent's actions and that target diverge is the failure signal, and it flags where **targeted expert data** most improves AI quality.
