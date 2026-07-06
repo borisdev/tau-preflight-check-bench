@@ -45,7 +45,7 @@ class ActionPrecondition(BaseModel):  # ActionPrecondition (mechanism/theory) â€
 
     id: str
     action: str          # a canonical tau3 tool name
-    rule: str
+    preflight_protocol: str
     source_field: str
     source_quote: str
 

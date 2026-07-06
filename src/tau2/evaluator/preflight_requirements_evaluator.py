@@ -50,7 +50,7 @@ def _action_invocations(trajectory: list[dict]):
 class StructuredRequirementViolation(BaseModel):
     precondition_id: str
     action: str
-    rule: str
+    preflight_protocol: str
     source_field: str
     source_quote: str
     requirement_kind: str  # "prohibited_action"
@@ -59,7 +59,7 @@ class StructuredRequirementViolation(BaseModel):
 
     def describe(self) -> str:
         return (
-            f"[{self.precondition_id}] VIOLATED at turn {self.turn}: {self.rule}\n"
+            f"[{self.precondition_id}] VIOLATED at turn {self.turn}: {self.preflight_protocol}\n"
             f"    action: {self.action}  ({self.requirement_kind})\n"
             f"    evidence: {self.evidence}\n"
             f'    source ({self.source_field}): "{self.source_quote}"'
@@ -93,7 +93,7 @@ def _check_precondition(
                 StructuredRequirementViolation(
                     precondition_id=precondition.id,
                     action=precondition.action,
-                    rule=precondition.rule,
+                    preflight_protocol=precondition.preflight_protocol,
                     source_field=precondition.source_field,
                     source_quote=precondition.source_quote,
                     requirement_kind="prohibited_action",

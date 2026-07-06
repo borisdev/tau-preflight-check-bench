@@ -65,7 +65,7 @@ def lift(task):
     cons = next((b.input.get("constraints", []) for b in r.content
                  if b.type == "tool_use" and b.name == "emit"), [])
     preconds = [ActionPrecondition(id=f"task{tid}.no_{c['action']}_{i}", action=c["action"],
-                                   rule=c.get("rule", ""), source_field="task_instructions",
+                                   preflight_protocol=c.get("rule", ""), source_field="task_instructions",
                                    source_quote=c["source_quote"]) for i, c in enumerate(cons)]
     upr = UserPreflightRequirements(action_preconditions=preconds)
     v1 = _load_airline_task_instructions(tid).model_copy(update={"user_preflight_requirements": upr})

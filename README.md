@@ -100,15 +100,11 @@ The field is optional (`default None`), so existing tasks are unaffected and the
 +     ActionPrecondition(                                  # a prohibition, grounded in the user's own words
 +       id="task47.no_unwanted_transfer",
 +       action="transfer_to_human_agents",                 # a canonical τ³ tool name
-+       rule="must not transfer — ruled out by the user profile",
++       preflight_protocol="must not transfer — ruled out by the user profile",
 +       source_field="task_instructions",
 +       source_quote="You don't want to be transferred to another agent."),   # ← the red line above
 +   ])
 ```
-
-The `PreflightRequirementsEvaluator` flips task 47 `PASS → FAIL` — a controlled result (FAQ: *did you invent a rule?* · *a different conversation?*). Mechanics + verification: [`docs/pilot-details.md`](docs/pilot-details.md).
-
-Epistemic precondition in depth (ontic vs epistemic, SME hydration, the PDDL / Pydantic action frame): [`docs/epistemic-preconditions.md`](docs/epistemic-preconditions.md).
 
 ## Impact on AI quality: eliciting SME expertise
 

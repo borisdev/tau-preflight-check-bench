@@ -55,7 +55,7 @@ def build_task_47() -> StructuredUserInstructions:
             ActionPrecondition(
                 id="task47.no_unwanted_transfer",
                 action="transfer_to_human_agents",
-                rule="the agent must not transfer the user; the user explicitly refused",
+                preflight_protocol="the agent must not transfer the user; the user explicitly refused",
                 source_field="task_instructions",
                 # verbatim substring of task_instructions (lower-case, inside a compound sentence)
                 source_quote="you don't want to be transferred to another agent",
