@@ -31,7 +31,7 @@ from __future__ import annotations
 from pydantic import BaseModel, Field
 
 
-class ActionPrecondition(BaseModel):  # ActionPrecondition (mechanism/theory) — or ActionPolicy (product/Turing); maybe rename
+class ActionPrecondition(BaseModel):  # ActionPrecondition (mechanism/theory) — or ActionPolicy (product); maybe rename
     """A single gradeable prohibition on a consequential action, with provenance to the prose.
 
     Phase-1 scope: each precondition is an outright prohibition — "this action must not fire"
