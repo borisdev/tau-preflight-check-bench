@@ -55,7 +55,7 @@ Analogous to how a medical doctor can harm or hassle a patient by ignoring her p
 
 ## The preflight rule we added to the policy
 
-To make the check *fair to grade*, the agent must be **told** to run it. So we extend the airline policy the agent is given — a generalization of τ³'s existing *"confirm before a database update"* rule to every consequential action:
+We extend the airline policy the agent is given — a generalization of τ³'s existing *"confirm before a database update"* rule to every consequential action:
 
 ```diff
   Before taking any actions that update the booking database (booking, modifying flights, editing baggage, changing cabin class, or updating passenger information), you must list the action details and obtain explicit user confirmation (yes) to proceed.
