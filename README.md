@@ -2,9 +2,31 @@
 
 [![CI](https://github.com/borisdev/tau-discernment/actions/workflows/ci.yml/badge.svg)](https://github.com/borisdev/tau-discernment/actions/workflows/ci.yml)
 
-*τ-discernment-bench extends τ-bench. τ-bench grades **effectiveness** — did the agent complete the task (correct final database)? We add **discernment** — before each consequential action, did the agent show good judgment: tell **harm from hassle** and choose a **proportionate** safeguard? Discernment failures land *before* the final state — proceeding too fast, skipping a check, escalating or refusing needlessly — where an outcome grader is blind.*
+*Extends τ³-bench beyond **effectiveness** to also grade **discernment** — how well an AI agent balances competing goals when they pull against each other.*
 
-> **What this benchmark is made of.** Discernment can't be read off the final database state — it takes **expert judgments about actions under varying conditions**: for each consequential decision, *would a competent domain expert have done the same?* That makes τ-discernment deliberately **annotation-intensive by design — and that's the feature, not the bug.** A handful of realistic trajectories expands into a large set of **expert-labeled decision judgments**: the high-value supervision data this benchmark exists to produce.
+τ-bench grades **effectiveness**: *did the agent reach the correct terminal state while satisfying the task policy?* Necessary, but not sufficient — two agents can reach the **same** final state while making very different decisions to get there.
+
+τ-discernment adds **discernment**: when **task success**, **safety invariants**, and **user requirements** pull in different directions, *did the agent choose the same **proportionate** action a domain expert would?* That's invisible to terminal-state grading — and it's where the interesting failures live.
+
+The three objectives already exist in every τ³ task:
+
+- **task success** — the expected terminal database state
+- **safety invariants** — policy rules that hold for every customer
+- **user requirements** — this customer's own constraints
+
+Discernment is what happens **when they conflict**:
+
+| Tension | Airline example |
+|---|---|
+| Task success vs safety invariant | User wants a fast refund, but identity or eligibility is unclear. |
+| Task success vs user requirement | User asks to rebook "as cheap as possible," but the fastest valid option costs more. |
+| Safety invariant vs user preference | Policy requires confirmation before cancelling, but asking again annoys the user. |
+| User requirement vs safety invariant | User says "don't ask me anything else," but the cancellation is irreversible. |
+| *(the summary)* | An agent can cancel correctly yet skip warning about the refund loss — **same terminal state, worse discernment.** |
+
+The benchmark doesn't hard-code how to resolve these. It grades whether the agent's choice matches **SME-authored policy** for the situation. **User requirements aren't absolute** — they're one objective among three, and discernment is deciding *when* a stated preference should be honored and *when* it should be overridden.
+
+> Grading discernment means labeling **which action an expert would take, case by case** — so τ-discernment is deliberately **annotation-intensive by design.** That's the point, not a caveat: a handful of realistic trajectories becomes a large set of **expert-labeled decision judgments** — the high-value supervision data this benchmark exists to produce.
 
 <details>
 <summary><b>Glossary</b> — key terms, sequenced by dependency (click to expand)</summary>
@@ -50,17 +72,6 @@ We ran Claude Haiku on τ³-bench airline task 47 and flag an **in-spirit failur
 ```
 
 *The patch* (below) shows how we make that requirement gradeable.
-
-## Effectiveness and discernment
-
-τ-bench grades the **what** — did the agent reach the target outcome? Real service also turns on the **how**: did the agent's actions *fit this user*, and did it *weigh the consequences* before acting? An agent can nail the outcome and still get the *how* wrong — escalating a user who didn't want it, charging without confirming, cancelling something irreversible on a vague request. Two agents with identical final states can differ sharply here, and τ-bench scores them the same.
-
-So every trajectory gets **two orthogonal scores**:
-
-- **Effectiveness** — did the task succeed? (τ-bench's existing evaluation.)
-- **Discernment** — before each consequential action, was the judgment sound: **harm avoided, without needless hassle**?
-
-This is a deliberately **simple, low-cost, high-ROI step closer to reality — not a cute technique**: on the *same* tasks and *same* recorded trajectories, we grade a real behavior the outcome-grader misses — transparently and reproducibly.
 
 ## The same gap, in three domains
 
