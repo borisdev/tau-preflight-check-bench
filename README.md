@@ -99,25 +99,6 @@ The `PreflightRequirementsEvaluator` flips task 47 `PASS → FAIL` — a control
 
 Epistemic precondition in depth (ontic vs epistemic, SME hydration, the PDDL / Pydantic action frame): [`docs/epistemic-preconditions.md`](docs/epistemic-preconditions.md).
 
-## Full-suite result: 50 airline tasks
-
-We ran the whole pipeline on the airline domain — one agent (Haiku), one run.
-
-| Measure | Value |
-|---|---|
-| Airline tasks run | 50 |
-| τ³ DB-grade | 27 PASS · 23 FAIL |
-| Prohibitions lifted from task text (Pass 1) | 11 tasks · **0 invented** — every rule's `source_quote` is a verbatim substring of the task |
-| **Flips — τ³ PASS → preflight FAIL** | **1 — task 6** |
-
-**The flip (task 6):** the agent fired `transfer_to_human_agents` **without asking** — and the user’s profile rules it out: *"Under no circumstances do you want to be transferred to another agent."* (The user never voiced this in the call; the agent escalated anyway.) τ³ passed it (the transfer left the DB unchanged); the preflight grader caught it. A *different* task from 47, the **same blind spot** — reproduced automatically, with **zero invented rules**.
-
-> **Two-pattern read.** Task 6 is **Pattern B** (*should-exist but omitted*): the airline policy never says *confirm before escalating* — the user's preference reveals that gap, exactly where an expert should author a rule. The airtight **Pattern A** (*revealed but missed*) is the **next experiment**: policy **line 7** already mandates *"obtain explicit user confirmation before a booking-database update,"* yet an agent that skips that confirm-step but lands the correct DB **still passes τ³** (which grades the final state, not the confirmation). Zero ambiguity — no latent preference, no simulator question — the cleanest next demonstration.
-
-*Task 47 — the worked example above — flipped in the **pilot** run (a different recorded trajectory). In this fresh full-suite run Haiku didn't transfer in task 47, so 47 didn't flip here; task 6 did. Same blind spot, a different task each run.*
-
-> **Disclaimer — one stochastic run, not a rate.** A flip requires the agent to *actually commit* the violation, which is probabilistic; well-behaved agents rarely do. So **1 is a floor, not a prevalence rate.** A stable rate + confidence needs **multiple seeds and/or a second agent model** (future work). This is a Phase-1 pilot, not a measured benchmark.
-
 ## Impact on AI quality: eliciting SME expertise and belief tracking
 
 Both directions build on the same `UserPreflightRequirements` target.
@@ -264,7 +245,7 @@ Data artifacts: [`poc/trajectories.json`](poc/trajectories.json), [`poc/verified
 
 Reproduce: `run_airline.py` → `analyze_beliefs.py` → `verify_findings.py`.
 
-**Full-suite run** (all 50 airline tasks; needs `ANTHROPIC_API_KEY`) — the three passes behind the result above:
+**Full-suite run** (all 50 airline tasks; needs `ANTHROPIC_API_KEY`) — the three passes (record → lift → grade):
 
 ```bash
 uv run python poc/run_airline.py        # Pass 0 · record 50 trajectories         -> poc/trajectories_all.json
