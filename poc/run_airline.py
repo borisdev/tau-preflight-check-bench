@@ -28,6 +28,15 @@ POLICY = open(os.path.join(ROOT, "data/tau2/domains/airline/policy.md")).read()
 ALL_TASKS = {t["id"]: t for t in json.load(open(os.path.join(ROOT, "data/tau2/domains/airline/tasks.json")))}
 TASK_IDS = os.environ["RUN_TASKS"].split() if os.environ.get("RUN_TASKS") else list(ALL_TASKS.keys())
 client = anthropic.Anthropic()
+import time as _time
+def _msg(**kw):
+    for _a in range(6):
+        try:
+            return client.messages.create(**kw)
+        except (anthropic.RateLimitError, anthropic.APIStatusError, anthropic.APIConnectionError):
+            if _a == 5:
+                raise
+            _time.sleep(2 ** _a)
 
 USER_SIM_TMPL = """You are role-playing a CUSTOMER contacting an airline customer-service agent. Stay in character.
 
@@ -71,7 +80,7 @@ def replay_target_hash(task):
         except Exception: pass
     return tk.get_db_hash()
 
-def run_task(tid):
+def run_task(tid, run=0):
     task = ALL_TASKS[tid]
     tk = fresh_tools()
     tools = anthropic_tools(tk)
@@ -79,7 +88,7 @@ def run_task(tid):
     usys = USER_SIM_TMPL.format(instructions=user_instructions(task))
 
     # user opens
-    u = client.messages.create(model=USER_MODEL, max_tokens=300, system=usys, messages=user_msgs)
+    u = _msg(model=USER_MODEL, max_tokens=300, system=usys, messages=user_msgs)
     utext = text_of(u.content); user_msgs.append({"role": "assistant", "content": utext})
     trace.append({"role": "user", "text": utext})
 
@@ -90,7 +99,7 @@ def run_task(tid):
         # agent inner tool loop until it emits a user-facing text
         agent_text = ""
         for _ in range(MAX_TOOL_STEPS):
-            r = client.messages.create(model=AGENT_MODEL, max_tokens=1024, system=POLICY, tools=tools, messages=agent_msgs)
+            r = _msg(model=AGENT_MODEL, max_tokens=1024, system=POLICY, tools=tools, messages=agent_msgs)
             agent_msgs.append({"role": "assistant", "content": r.content})
             tool_uses = [b for b in r.content if b.type == "tool_use"]
             txt = text_of(r.content)
@@ -112,7 +121,7 @@ def run_task(tid):
             agent_text = "(no response)"
         # user reacts
         user_msgs.append({"role": "user", "content": agent_text})
-        u = client.messages.create(model=USER_MODEL, max_tokens=300, system=usys, messages=user_msgs)
+        u = _msg(model=USER_MODEL, max_tokens=300, system=usys, messages=user_msgs)
         utext = text_of(u.content); user_msgs.append({"role": "assistant", "content": utext})
         trace.append({"role": "user", "text": utext})
 
@@ -120,23 +129,26 @@ def run_task(tid):
     target_hash = replay_target_hash(task)
     return {"task_id": tid, "purpose": (task.get("description") or {}).get("purpose"),
             "instructions": user_instructions(task), "reward": int(end_hash == target_hash),
-            "db_changed": end_hash != fresh_tools().get_db_hash(), "trajectory": trace}
+            "db_changed": end_hash != fresh_tools().get_db_hash(), "trajectory": trace, "run": run}
 
 def main():
+    repeats = int(os.environ.get("REPEATS", "1"))
+    workers = int(os.environ.get("RUN_WORKERS", "3"))
+    work = [(tid, r) for r in range(repeats) for tid in TASK_IDS]
     results = []
-    with concurrent.futures.ThreadPoolExecutor(max_workers=3) as ex:
-        futs = {ex.submit(run_task, tid): tid for tid in TASK_IDS}
+    with concurrent.futures.ThreadPoolExecutor(max_workers=workers) as ex:
+        futs = {ex.submit(run_task, tid, r): (tid, r) for tid, r in work}
         for f in concurrent.futures.as_completed(futs):
-            tid = futs[f]
+            tid, r = futs[f]
             try:
                 res = f.result(); results.append(res)
-                print(f"task {tid}: reward={res['reward']} db_changed={res['db_changed']} turns={len(res['trajectory'])}")
+                print(f"run {r} task {tid}: reward={res['reward']} db_changed={res['db_changed']} turns={len(res['trajectory'])}")
             except Exception:
-                print(f"task {tid} FAILED"); traceback.print_exc()
-    results.sort(key=lambda r: TASK_IDS.index(r["task_id"]))
+                print(f"run {r} task {tid} FAILED"); traceback.print_exc()
+    results.sort(key=lambda x: (x.get("run", 0), TASK_IDS.index(x["task_id"])))
     out = os.path.join(ROOT, os.environ.get("RUN_OUT", "poc/trajectories_all.json"))
     json.dump(results, open(out, "w"), indent=2, default=str)
-    print(f"\nsaved {len(results)} trajectories -> {out}")
+    print(f"\nsaved {len(results)} trajectories ({repeats} run(s)) -> {out}")
     print("pass:", sum(r["reward"] for r in results), "/", len(results))
 
 if __name__ == "__main__":

@@ -15,3 +15,5 @@ poc/paired_grades.*
 poc/trajectories_all.json
 poc/_pass0.log
 poc/_smoke.json
+poc/trajectories_multi.json
+poc/_multi.log
