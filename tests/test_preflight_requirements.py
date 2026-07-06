@@ -85,7 +85,7 @@ def test_provenance_rejects_ungrounded_quote():
         ActionPrecondition(
             id="bogus",
             action="cancel_reservation",
-            rule="invented",
+            preflight_protocol="invented",
             source_field="task_instructions",
             source_quote="this string is not in the task text at all",
         )
@@ -173,7 +173,7 @@ def test_prohibition_grades_generic_requirements():
             ActionPrecondition(
                 id="x.no_charge",
                 action="charge_payment",
-                rule="do not charge without consent",
+                preflight_protocol="do not charge without consent",
                 source_field="task_instructions",
                 source_quote="n/a",
             )
