@@ -14,7 +14,7 @@
 - **safety invariants** — policy rules that hold for every customer
 - **user requirements** — this customer's own constraints
 
-Below are hypothetical airline customer-service scenarios — the goals in tension, the action at risk, and the discernment an expert would show:
+To illustrate how an AI agent behaves when faced with competing goals:
 
 | Goals in tension | Pending action | Golden discernment & rationale |
 |---|---|---|
