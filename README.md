@@ -27,7 +27,7 @@ The below hypothetical scenarios illustrate how we might evaluate an AI agent's 
 
 *🟣 marks the scenario worked through in detail below (task 47).*
 
-## τ³-bench already includes implicit user *snowflake* hassle requirements
+## The worked example: task 47
 
 We ran Claude Haiku on τ³ airline **task 47**. It handled the core request correctly — refused an ineligible refund — but then **transferred the user to a human without asking.** That transfer is a needless **hassle** that **hurt neither of the other two goals** (task success and the safety invariants were both satisfiable without it). The user's profile ruled the transfer out; she just never voiced it:
 
